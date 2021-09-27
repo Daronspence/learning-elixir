@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/57 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./26The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./26The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./26The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="tnKsJtHI5Ach+x/+yrxAlkuqWypMF5nbSr1UkT19pgbde4l0IaSizexx89swAmmb/Ji2nkY+4BPjgaBRkkqTHg==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./26The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>OTP GenServer</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Prepared Code</h3>
+<p>
+  Here's the function we added to <tt>pledge_server.ex</tt> to simulate fetching recent pledges from the external service:
+</p>
+<div class="highlight"><pre><span class="kd">defp</span> <span class="n">fetch_recent_pledges_from_service</span> <span class="k">do</span>
+  <span class="c1"># CODE GOES HERE TO FETCH RECENT PLEDGES FROM EXTERNAL SERVICE</span>
+
+  <span class="c1"># Example return value:</span>
+  <span class="p">[</span> <span class="p">{</span><span class="s2">"wilma"</span><span class="p">,</span> <span class="mi">15</span><span class="p">},</span> <span class="p">{</span><span class="s2">"fred"</span><span class="p">,</span> <span class="mi">25</span><span class="p">}</span> <span class="p">]</span>
+<span class="k">end</span>
+</pre></div>
+
+<h3>Task, Agent, or GenServer?</h3>
+<p>
+  The good news is that your decision doesn't have to be permanent! You can start with one abstraction and then migrate to another with relative ease. 
+</p>
+<p>
+  Here are a few heuristics to help you get started on the right foot:
+</p>
+<ul>
+  <li>
+    <p>
+      Use a <tt>Task</tt> if you want to perform a <strong>one-off computation or query</strong> asynchronously.
+    </p>
+  </li>
+  <li>
+    <p>
+      Use an <tt>Agent</tt> if you just need a <strong>simple process to hold state</strong>.
+    </p>
+  </li>
+  <li>
+    <p>
+      Use a <tt>GenServer</tt> if you need a long-running server process that <strong>store states <em>and</em> performs work concurrently</strong>.
+    </p>
+  </li>
+  <li>
+    <p>
+      Use a dedicated <tt>GenServer</tt> process if you need to <strong>serialize access to a shared resource or service</strong> used by multiple concurrent processes.
+    </p>
+  </li>
+  <li>
+    <p>
+      Use a <tt>GenServer</tt> process if you need to <strong>schedule background work to be performed on a periodic interval</strong>.
+    </p>
+  </li>
+</ul>
+<p>
+  Don't spend too much time fretting over the decision. You can start with an <tt>Agent</tt>, for example, and then migrate it to a <tt>GenServer</tt> if the process needs to do more than simply store state. 
+</p>
+
+<h3>GenServer Callback Functions</h3>
+<p>
+  Erlang's <tt>gen_server</tt> behavior expects the callback module to implement six callback functions. Elixir's <tt>GenServer</tt> module conveniently provides default implementations of all six callback functions.
+  When you add <tt>use GenServer</tt> to a module, the default callbacks are injected into the module. You then add application-specific behavior by overriding any of the default implementations.
+</p>
+<p>
+  Here's a quick break-down of the callback functions:
+</p>
+<ul>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">handle_call(message, from, state)</tt>
+    </p>
+    <p>
+      Invoked to handle <strong>synchronous</strong> requests sent by the client using <tt>GenServer.call(pid, message)</tt>. The <tt>message</tt> argument is the message sent by <tt>call</tt>. The <tt>from</tt> argument is typically ignored: it's a tuple in the form <tt>{pid, tag}</tt> where <tt>pid</tt> is the caller's PID and <tt>tag</tt> uniquely identifies the call. And the <tt>state</tt> argument is the server's current state.
+    </p>
+    <p>
+      Typically you'll return <tt>{:reply, reply, new_state}</tt> which sends the response <tt>reply</tt> to the client and recursively loops with the <tt>new_state</tt>. If you need to stop the server, you can return <tt>{:stop, reason, new_state}</tt> which will cause the process to exit with <tt>reason</tt>.
+    </p>
+    <p>
+      The default implementation returns <tt>{:stop, {:bad_call, msg}, state}</tt> and stops the server. Therefore, you must implement one <tt>handle_call</tt> function clause for every <tt>message</tt> your server can handle.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">handle_cast(message, state)</tt>
+    </p>
+    <p>
+      Invoked to handle <strong>asynchronous</strong> requests sent by the client using <tt>GenServer.cast(pid, message)</tt>. The <tt>message</tt> argument is the message sent by <tt>cast</tt>. The <tt>state</tt> argument is the server's current state.
+    </p>
+    <p>
+      Typically you'll return <tt>{:noreply, new_state}</tt> which recursively loops with the <tt>new_state</tt>. If you need to stop the server, you can return <tt>{:stop, reason, new_state}</tt> which will cause the process to exit with <tt>reason</tt>.
+    </p>
+    <p>
+      The default implementation returns <tt>{:stop, {:bad_cast, msg}, state}</tt> and stops the server. Therefore, you must implement one <tt>handle_cast</tt> function clause for every <tt>message</tt> your server can handle.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">handle_info(message, state)</tt>
+    </p>
+    <p>
+      Invoked to handle <strong>all other</strong> requests sent by the client that are not call or cast requests. The <tt>message</tt> argument is the message sent by the client. The <tt>state</tt> argument is the server's current state.
+    </p>
+    <p>
+      The default implementation logs the message and returns <tt>{:noreply, state}</tt>.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">init(args)</tt>
+    </p>
+    <p>
+      Invoked when the server is started. For example, when you start a server like so
+    </p>
+    <div class="highlight"><pre><span class="nc">GenServer</span><span class="p">.</span><span class="n">start</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="p">[],</span> <span class="ss">name</span><span class="p">:</span> <span class="na">@name</span><span class="p">)</span>
+</pre></div>
+    <p>
+      then <tt>init</tt> is automatically called and passed the second argument of <tt>start</tt> which is <tt>[]</tt> in this case.
+    </p>
+    <p>
+      Here's the default implementation:
+    </p>
+    <div class="highlight"><pre><span class="kd">def</span> <span class="n">init</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">args</span><span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+    <p>
+      Typically you'll return <tt>{:ok, state}</tt> to indicate that initialization was successful, which will cause <tt>start</tt> to return <tt>{:ok, pid}</tt>. Otherwise, if initialization failed for some reason, you can return <tt>{:stop, reason}</tt> which will cause <tt>start</tt> to return <tt>{:error, reason}</tt> and the process will exit
+      with <tt>reason</tt>.
+    </p>
+    <p>
+      It's important to note that <tt>start</tt> will block until <tt>init</tt> returns. The server process can't be used until it has been successfully initialized.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">terminate(reason, state)</tt>
+    </p>
+    <p>
+      Invoked when the server is about to terminate. A server can terminate for a variety of reasons. For example, a <tt>handle_call</tt> or <tt>handle_cast</tt> function might return <tt>{:stop, reason, new_state}</tt>. The <tt>reason</tt> argument is the reason the process is exiting (which is the same reason included in the stop tuple) and the <tt>state</tt> argument is the current state.
+    </p>
+    <p>
+      The intent of this callback is to allow you to do any necessary cleanup. For example, you could close a resource that was being used by the process. You could even store the <tt>state</tt> to disk or send it in a message to another process so that state isn't lost forever.
+    </p>
+    <p>
+      However, there are situations when <tt>terminate</tt> won't get called, so it's not a reliable way to clean up after a process. A more reliable approach is to use a Supervisor which we'll explore a bit later in the course.
+    </p>
+    <p>
+      Here's the default implementation:
+    </p>
+    <div class="highlight"><pre><span class="kd">def</span> <span class="n">terminate</span><span class="p">(</span><span class="n">_reason</span><span class="p">,</span> <span class="n">_state</span><span class="p">)</span> <span class="k">do</span>
+  <span class="ss">:ok</span>
+<span class="k">end</span>
+</pre></div>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">code_change(old_version, state, extra)</tt>
+    </p>
+    <p>
+      The Erlang VM supports hot code-swapping. When a new version of a module is loaded while the server is running, you may need to migrate the structure of the old process state to a new structure. This callback is invoked to allow for state migration.
+    </p>
+    <p>
+      Typically you won't need to implement this callback. The default implementation simply returns the current state:
+    </p>
+    <div class="highlight"><pre><span class="kd">def</span> <span class="n">code_change</span><span class="p">(</span><span class="n">_old_version</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">_extra</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">state</span><span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+    <p></p>
+      To change the state you'd override the default implementation to return <tt>{:ok, new_state}</tt>.
+    <p></p>
+  </li>
+</ul>
+<p>
+  For more detailed information on any of the callbacks, check out the <a href="https://hexdocs.pm/elixir/GenServer.html#callbacks" target="_blank">callback documentation</a>.
+</p>
+
+<h3>Call Timeouts</h3>
+<p>
+  Invoking <tt>GenServer.call</tt> is a synchronous call: it sends a message to the server and waits for a response. However, it won't wait forever! By default, if it doesn't receive a response within 5 seconds then a timeout error is raised.
+</p>
+<p>
+  You can override the default by passing a timeout value (in milliseconds) as the third argument to <tt>call</tt>. For example, the following call reduces the timeout to 2 seconds for better responsiveness:
+</p>
+<div class="highlight"><pre><span class="nc">GenServer</span><span class="p">.</span><span class="n">call</span> <span class="na">@name</span><span class="p">,</span> <span class="ss">:recent_pledges</span><span class="p">,</span> <span class="mi">2000</span>
+</pre></div>
+
+<h3>Debugging and Tracing</h3>
+<p>
+  Back when we first started writing the <tt>PledgeServer</tt>, you might recall that we added the following line to print the current state to the screen:
+</p>
+<div class="highlight"><pre><span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"New state is </span><span class="si">#{</span><span class="n">inspect</span> <span class="n">new_state</span><span class="si">}</span><span class="s2">"</span>
+</pre></div>
+<p>
+  And then later on we removed that line...
+</p>
+<p>
+  Sometimes it's handy to be able to peek inside a GenServer for debugging purposes. Turns out Erlang has a <tt>sys</tt> module that's like a Swiss Army Knife for debugging processes. 
+</p>
+<p>
+  For example, suppose we want to get the current state of a running <tt>PledgeServer</tt> process. First, crank up the process:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">pid</span><span class="p">}</span> <span class="p">=</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+<p>
+  Then, to get the current state of that process, use the <tt>:sys.get_state</tt> function like so:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:sys</span><span class="p">.</span><span class="n">get_state</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+<span class="p">%</span><span class="nc">Servy.PledgeServer.State</span><span class="p">{</span><span class="ss">cache_size</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="ss">pledges</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"wilma"</span><span class="p">,</span> <span class="mi">15</span><span class="p">},</span> <span class="p">{</span><span class="s2">"fred"</span><span class="p">,</span> <span class="mi">25</span><span class="p">}]}</span>
+</pre></div>
+<p>
+  Cool - it returns our <tt>State</tt> struct representing the current state!
+</p>
+<p>
+  Go ahead and change the state by creating a pledge:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">create_pledge</span><span class="p">(</span><span class="s2">"larry"</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+<p>
+  Now when you call <tt>:sys.get_state</tt> you can see that the list of pledges has been updated with Larry's pledge:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:sys</span><span class="p">.</span><span class="n">get_state</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+<span class="p">%</span><span class="nc">Servy.PledgeServer.State</span><span class="p">{</span><span class="ss">cache_size</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+ <span class="ss">pledges</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"larry"</span><span class="p">,</span> <span class="mi">10</span><span class="p">},</span> <span class="p">{</span><span class="s2">"wilma"</span><span class="p">,</span> <span class="mi">15</span><span class="p">},</span> <span class="p">{</span><span class="s2">"fred"</span><span class="p">,</span> <span class="mi">25</span><span class="p">}]}</span>
+</pre></div>
+<p>
+  Here's another useful debugging strategy: Suppose you want to see what happens behind the scenes when a client sends a synchronous call request to the server process. The <tt>:sys.trace</tt> function is your backstage pass! 
+</p>
+<p>
+  First, turn on tracing for the server process:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:sys</span><span class="p">.</span><span class="n">trace</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="no">true</span><span class="p">)</span>
+<span class="ss">:ok</span>
+</pre></div>
+<p>
+  Then send a message to the server. For example, we'll create another pledge:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">create_pledge</span><span class="p">(</span><span class="s2">"moe"</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+
+<span class="o">*</span><span class="nc">DBG</span><span class="o">*</span> <span class="n">pledge_server</span> <span class="n">got</span> <span class="n">call</span> <span class="p">{</span><span class="n">create_pledge</span><span class="p">,&lt;&lt;</span><span class="s2">"moe"</span><span class="p">&gt;&gt;,</span><span class="mi">20</span><span class="p">}</span> <span class="n">from</span> <span class="o">&lt;</span><span class="mf">0.152</span><span class="p">.</span><span class="mi">0</span><span class="o">&gt;</span>
+<span class="o">*</span><span class="nc">DBG</span><span class="o">*</span> <span class="n">pledge_server</span> <span class="n">sent</span> <span class="p">&lt;&lt;</span><span class="s2">"pledge-275"</span><span class="p">&gt;&gt;</span> <span class="n">to</span> <span class="o">&lt;</span><span class="mf">0.152</span><span class="p">.</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">new</span> <span class="n">state</span> <span class="c1">#{'__struct__'=&gt;'Elixir.Servy.PledgeServer.State',cache_size=&gt;3,pledges=&gt;[{&lt;&lt;109,111,101&gt;&gt;,20},{&lt;&lt;108,97,114,114,121&gt;&gt;,10},{&lt;&lt;119,105,108,109,97&gt;&gt;,15}]}</span>
+</pre></div>
+<p>
+  Check out all that wonderful tracing information! We see the server received the message from the client PID and sent a response message back to the same client. When you enable tracing, all the <em>system events</em> that are sent by the Erlang VM in the background are printed to standard output.
+</p>
+<p>
+  You probably already figured out how to turn off tracing, but just in case it wasn't obvious:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:sys</span><span class="p">.</span><span class="n">trace</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="no">false</span><span class="p">)</span>
+<span class="ss">:ok</span>
+</pre></div>
+<p>
+  You can also get the full status of a process using the <tt>:sys.get_status</tt> function:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:sys</span><span class="p">.</span><span class="n">get_status</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+
+<span class="p">{</span><span class="ss">:status</span><span class="p">,</span> <span class="c1">#PID&lt;0.169.0&gt;, {:module, :gen_server},</span>
+ <span class="p">[[</span><span class="s2">"$initial_call"</span><span class="p">:</span> <span class="p">{</span><span class="nc">Servy.PledgeServer</span><span class="p">,</span> <span class="ss">:init</span><span class="p">,</span> <span class="mi">1</span><span class="p">},</span>
+   <span class="s2">"$ancestors"</span><span class="p">:</span> <span class="p">[</span><span class="c1">#PID&lt;0.167.0&gt;, #PID&lt;0.63.0&gt;]], :running, #PID&lt;0.169.0&gt;,</span>
+  <span class="p">[</span><span class="ss">trace</span><span class="p">:</span> <span class="no">true</span><span class="p">],</span>
+  <span class="p">[</span><span class="ss">header</span><span class="p">:</span> <span class="s1">'Status for generic server pledge_server'</span><span class="p">,</span>
+   <span class="ss">data</span><span class="p">:</span> <span class="p">[{</span><span class="s1">'Status'</span><span class="p">,</span> <span class="ss">:running</span><span class="p">},</span> <span class="p">{</span><span class="s1">'Parent'</span><span class="p">,</span> <span class="c1">#PID&lt;0.169.0&gt;},</span>
+    <span class="p">{</span><span class="s1">'Logged events'</span><span class="p">,</span> <span class="p">[]}],</span>
+   <span class="ss">data</span><span class="p">:</span> <span class="p">[{</span><span class="s1">'State'</span><span class="p">,</span>
+     <span class="p">%</span><span class="nc">Servy.PledgeServer.State</span><span class="p">{</span><span class="ss">cache_size</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+      <span class="ss">pledges</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"wilma"</span><span class="p">,</span> <span class="mi">15</span><span class="p">},</span> <span class="p">{</span><span class="s2">"fred"</span><span class="p">,</span> <span class="mi">25</span><span class="p">}]}}]]]}</span>
+</pre></div>
+<p>
+  The output includes an indication of whether the process is running or is suspended, the parent PID, and the current state.
+</p>
+<p>
+  We've hardly scratched the surface of what's possible with the <tt>sys</tt> module. You can imagine that after a few decades of Erlang being used in production, the <tt>sys</tt> module has evolved to include everything you'd need. For more details, check out the <a href="http://erlang.org/doc/man/sys.html" target="_blank">documentation</a>.
+</p>
+
+<h3>Exercise: Send Requests Through the Web Server</h3>
+<p>
+  After converting our hand-rolled <tt>PledgeServer</tt> to a <tt>GenServer</tt>, we didn't have to change the <tt>PledgeController</tt> because it uses the client interface and those functions haven't changed:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.PledgeController</span> <span class="k">do</span>
+  <span class="kd">def</span> <span class="n">create</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="p">%{</span><span class="s2">"name"</span> <span class="p">=&gt;</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"amount"</span> <span class="p">=&gt;</span> <span class="n">amount</span><span class="p">})</span> <span class="k">do</span>
+<span class="hll">    <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">create_pledge</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nc">String</span><span class="p">.</span><span class="n">to_integer</span><span class="p">(</span><span class="n">amount</span><span class="p">))</span>
+</span>    <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="s2">"</span><span class="si">#{</span><span class="n">name</span><span class="si">}</span><span class="s2"> pledged </span><span class="si">#{</span><span class="n">amount</span><span class="si">}</span><span class="s2">!"</span> <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">index</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+<span class="hll">    <span class="n">pledges</span> <span class="p">=</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">recent_pledges</span><span class="p">()</span>
+</span>    <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="p">(</span><span class="n">inspect</span> <span class="n">pledges</span><span class="p">)</span> <span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+So in the video we didn't bother to send any requests to the <tt>PledgeController</tt>, but feel free to give that a whirl on your own!
+</p>
+<p>
+  First, you'll need to start up the two processes:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.HttpServer</span><span class="p">.</span><span class="n">start</span><span class="p">(</span><span class="mi">4000</span><span class="p">)</span>
+</pre></div>
+<p>
+  And then send requests just as you did before in the previous section. For example, here's how to send requests using the <tt>curl</tt> utility:
+</p>
+<pre>curl -XPOST http://localhost:4000/pledges -d 'name=larry&amp;amount=100'
+curl -XPOST http://localhost:4000/pledges -d 'name=moe&amp;amount=200'
+curl -XPOST http://localhost:4000/pledges -d 'name=curly&amp;amount=300'
+curl -XPOST http://localhost:4000/pledges -d 'name=daisy&amp;amount=400'
+curl -XPOST http://localhost:4000/pledges -d 'name=grace&amp;amount=500'
+
+curl http://localhost:4000/pledges</pre>
+<p>
+  The response should be the following three pledges representing the cache:
+</p>
+<pre>[{"grace", 500}, {"daisy", 400}, {"curly", 300}]</pre>
+
+<h3>Exercise: How Does handle_info Work?</h3>
+<p>
+  In your hand-rolled <tt>GenericServer</tt> you're currently handling unexpected messages with this clause in <tt>listen_loop</tt>:
+</p>
+<div class="highlight"><pre><span class="n">unexpected</span> <span class="p">-&gt;</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Unexpected messaged: </span><span class="si">#{</span><span class="n">inspect</span> <span class="n">unexpected</span><span class="si">}</span><span class="s2">"</span>
+  <span class="n">listen_loop</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">callback_module</span><span class="p">)</span>
+</pre></div>
+<p>
+  But as we saw in the video, GenServer handles all unexpected messages by invoking the <tt>handle_info</tt> function in the callback module. 
+</p>
+<p>
+  Just to get more comfortable with how <tt>GenServer</tt> works under the hood, change your <tt>GenericServer</tt> so that it handles unexpected messages the same way using a <tt>handle_info</tt> callback function.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">listen_loop</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">callback_module</span><span class="p">)</span> <span class="k">do</span>
+  <span class="k">receive</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:call</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">message</span><span class="p">}</span> <span class="ow">when</span> <span class="n">is_pid</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span> <span class="p">-&gt;</span>
+      <span class="p">{</span><span class="n">response</span><span class="p">,</span> <span class="n">new_state</span><span class="p">}</span> <span class="p">=</span> <span class="n">callback_module</span><span class="p">.</span><span class="n">handle_call</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+      <span class="n">send</span> <span class="n">sender</span><span class="p">,</span> <span class="p">{</span><span class="ss">:response</span><span class="p">,</span> <span class="n">response</span><span class="p">}</span>
+      <span class="n">listen_loop</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">callback_module</span><span class="p">)</span>
+    <span class="p">{</span><span class="ss">:cast</span><span class="p">,</span> <span class="n">message</span><span class="p">}</span> <span class="p">-&gt;</span>
+      <span class="n">new_state</span> <span class="p">=</span> <span class="n">callback_module</span><span class="p">.</span><span class="n">handle_cast</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+      <span class="n">listen_loop</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">callback_module</span><span class="p">)</span>
+<span class="hll">    <span class="n">other</span> <span class="p">-&gt;</span>
+</span><span class="hll">      <span class="n">new_state</span> <span class="p">=</span> <span class="n">callback_module</span><span class="p">.</span><span class="n">handle_info</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+</span><span class="hll">      <span class="n">listen_loop</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">callback_module</span><span class="p">)</span>
+</span>  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then in your <tt>PledgeServerHandRolled</tt> module, add a <tt>handle_info</tt> callback to handle unexpected messages.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">handle_info</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Unexpected message: </span><span class="si">#{</span><span class="n">inspect</span> <span class="n">other</span><span class="si">}</span><span class="s2">"</span>
+  <span class="n">state</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Resizing the Cache</h3>
+<p>
+  In the video, we handled the <tt>{:set_cache_size, size}</tt> message by updating the <tt>cache_size</tt> field of the <tt>State</tt> struct, like so:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">handle_cast</span><span class="p">({</span><span class="ss">:set_cache_size</span><span class="p">,</span> <span class="n">size</span><span class="p">},</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">new_state</span> <span class="p">=</span> <span class="p">%{</span><span class="n">state</span> <span class="p">|</span> <span class="ss">cache_size</span><span class="p">:</span> <span class="n">size</span><span class="p">}</span>
+  <span class="p">{</span><span class="ss">:noreply</span><span class="p">,</span> <span class="n">new_state</span><span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  A caveat to this approach is that if a client resizes the cache and then invokes the <tt>recent_pledges</tt> function, the results won't reflect the resized cache because the cache isn't actually resized until a pledge is created.
+</p>
+<p>
+  If you want to get fancy, change the code to resize the cache when the 
+  <tt>{:set_cache_size, size}</tt> message is handled.
+</p> 
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">handle_cast</span><span class="p">({</span><span class="ss">:set_cache_size</span><span class="p">,</span> <span class="n">size</span><span class="p">},</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+<span class="hll">  <span class="n">resized_cache</span> <span class="p">=</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">state</span><span class="p">.</span><span class="n">pledges</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+</span><span class="hll">  <span class="n">new_state</span> <span class="p">=</span> <span class="p">%{</span><span class="n">state</span> <span class="p">|</span> <span class="ss">cache_size</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span> <span class="ss">pledges</span><span class="p">:</span> <span class="n">resized_cache</span><span class="p">}</span>
+</span>  <span class="p">{</span><span class="ss">:noreply</span><span class="p">,</span> <span class="n">new_state</span><span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Convert FourOhFourCounter to GenServer</h3>
+<p>
+  In previous exercises you incrementally hand-rolled a <tt>FourOhFourCounter</tt>. Now for the coups de grâce, convert it to use the <tt>GenServer</tt> behavior. When you're done, the <tt>FourOhFourCounterTest</tt> should still pass since the client interface will be the same.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.FourOhFourCounter</span> <span class="k">do</span>
+
+  <span class="na">@name</span> <span class="ss">:four_oh_four_counter</span>
+
+  <span class="kn">use</span> <span class="nc">GenServer</span>
+
+  <span class="c1"># Client Interface</span>
+
+  <span class="kd">def</span> <span class="n">start</span> <span class="k">do</span>
+    <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the 404 counter..."</span>
+    <span class="nc">GenServer</span><span class="p">.</span><span class="n">start</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="p">%{},</span> <span class="ss">name</span><span class="p">:</span> <span class="na">@name</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">bump_count</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">do</span>
+    <span class="nc">GenServer</span><span class="p">.</span><span class="n">call</span> <span class="na">@name</span><span class="p">,</span> <span class="p">{</span><span class="ss">:bump_count</span><span class="p">,</span> <span class="n">path</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">get_counts</span> <span class="k">do</span>
+    <span class="nc">GenServer</span><span class="p">.</span><span class="n">call</span> <span class="na">@name</span><span class="p">,</span> <span class="ss">:get_counts</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">get_count</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">do</span>
+    <span class="nc">GenServer</span><span class="p">.</span><span class="n">call</span> <span class="na">@name</span><span class="p">,</span> <span class="p">{</span><span class="ss">:get_count</span><span class="p">,</span> <span class="n">path</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">reset</span> <span class="k">do</span>
+    <span class="nc">GenServer</span><span class="p">.</span><span class="n">cast</span> <span class="na">@name</span><span class="p">,</span> <span class="ss">:reset</span>
+  <span class="k">end</span>
+
+  <span class="c1"># Server Callbacks</span>
+
+  <span class="kd">def</span> <span class="n">handle_call</span><span class="p">({</span><span class="ss">:bump_count</span><span class="p">,</span> <span class="n">path</span><span class="p">},</span> <span class="n">_from</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">new_state</span> <span class="p">=</span> <span class="nc">Map</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">{</span><span class="ss">:reply</span><span class="p">,</span> <span class="ss">:ok</span><span class="p">,</span> <span class="n">new_state</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">handle_call</span><span class="p">(</span><span class="ss">:get_counts</span><span class="p">,</span> <span class="n">_from</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:reply</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">state</span><span class="p">}</span>
+  <span class="k">end</span>
+  
+  <span class="kd">def</span> <span class="n">handle_call</span><span class="p">({</span><span class="ss">:get_count</span><span class="p">,</span> <span class="n">path</span><span class="p">},</span> <span class="n">_from</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">count</span> <span class="p">=</span> <span class="nc">Map</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span><span class="ss">:reply</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">state</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">handle_cast</span><span class="p">(</span><span class="ss">:reset</span><span class="p">,</span> <span class="n">_state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:noreply</span><span class="p">,</span> <span class="p">%{}}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: GenServers On Your Project?</h3>
+<p>
+  As we near the end of the course, if you haven't already started thinking about how you'll use Elixir on your project, well now's the time! Think about your domain and the problems you need to solve. Where might a GenServer be beneficial within your system?
+</p>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>gen-server</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/740/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

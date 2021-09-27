@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/46 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./22The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./22The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./22The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="84GRZ3uYridnNiavQt3VYuXTczvNL5ve0hMfcrHXRtKYiLQ1i/To7aq8yoq4Y/xvUuGej8cG4hZ7L+uyHuBzyg==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./22The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Sending and Receiving Messages</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Prepared Code</h3>
+<p>
+  At the start of the video, here's the route we added to <tt>handler.ex</tt> to handle requests for <tt>/snapshots</tt> and respond with a list of snapshot image filenames:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">route</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span> <span class="ss">method</span><span class="p">:</span> <span class="s2">"GET"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/snapshots"</span> <span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">snapshot1</span> <span class="p">=</span> <span class="nc">VideoCam</span><span class="p">.</span><span class="n">get_snapshot</span><span class="p">(</span><span class="s2">"cam-1"</span><span class="p">)</span>
+  <span class="n">snapshot2</span> <span class="p">=</span> <span class="nc">VideoCam</span><span class="p">.</span><span class="n">get_snapshot</span><span class="p">(</span><span class="s2">"cam-2"</span><span class="p">)</span>
+  <span class="n">snapshot3</span> <span class="p">=</span> <span class="nc">VideoCam</span><span class="p">.</span><span class="n">get_snapshot</span><span class="p">(</span><span class="s2">"cam-3"</span><span class="p">)</span>
+
+  <span class="n">snapshots</span> <span class="p">=</span> <span class="p">[</span><span class="n">snapshot1</span><span class="p">,</span> <span class="n">snapshot2</span><span class="p">,</span> <span class="n">snapshot3</span><span class="p">]</span>
+
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="n">inspect</span> <span class="n">snapshots</span><span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  And here's the <tt>VideoCam</tt> module we already had defined in the <tt>video_cam.ex</tt> file:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.VideoCam</span> <span class="k">do</span>
+  <span class="na">@doc</span> <span class="sh">"""</span>
+<span class="sh">  Simulates sending a request to an external API</span>
+<span class="sh">  to get a snapshot image from a video camera.</span>
+<span class="sh">  """</span>
+  <span class="kd">def</span> <span class="n">get_snapshot</span><span class="p">(</span><span class="n">camera_name</span><span class="p">)</span> <span class="k">do</span>
+    <span class="c1"># CODE GOES HERE TO SEND A REQUEST TO THE EXTERNAL API</span>
+
+    <span class="c1"># Sleep for 1 second to simulate that the API can be slow:</span>
+    <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+
+    <span class="c1"># Example response returned from the API:</span>
+    <span class="s2">"</span><span class="si">#{</span><span class="n">camera_name</span><span class="si">}</span><span class="s2">-snapshot.jpg"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+
+<h3>Spawning the Request Handler</h3>
+<p>
+  You might be wondering how in the previous module we were able to spawn the request-handling process without sending messages. As a refreshers, here's what that code looks like:
+</p>
+<div class="highlight"><pre><span class="n">spawn</span><span class="p">(</span><span class="k">fn</span><span class="p">()</span> <span class="p">-&gt;</span> <span class="n">serve</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+</pre></div>
+<p>
+  That works because the request-handling process has access to the <tt>client_socket</tt>. It reads the request from the socket and then writes the response back over that <tt>client_socket</tt>. There's no need to send a result to the parent process (the process that's runnning the web server) because the request-handling process sends the result directly back to the HTTP client via the socket.  
+</p>
+
+<h3>Processes, In a Nut</h3>
+<p>
+  Here are some important characteristics of processes we've learned so far, in a nutshell:
+</p>
+<ul>
+  <li>
+    <p>
+      they are lightweight and fast to spawn
+    </p>
+  </li>
+  <li>
+    <p>
+      they run concurrently, and even in parallel if you have multiple CPU cores
+    </p>
+  </li>
+  <li>
+    <p>
+      they are isolated from other processes
+    </p>
+  </li>
+  <li>
+    <p>
+      they don't share anything with other processes
+    </p>
+  </li>
+  <li>
+    <p>
+      they have their own private mailbox
+    </p>
+  </li>
+  <li>
+    <p>
+      they communicate with other processes only by sending and receiving messages
+    </p>
+  </li>
+</ul>
+
+<h3>The Scheduler Is Fair, and Smart</h3>
+<p>
+  In an earlier video we described how the Erlang VM scheduler allocates a slice of CPU time to a process. And when that time is up, the scheduler pre-empts (suspends) the running process and allocates time to another process. In this way, the scheduler tries its best to be fair to all processes.
+</p>
+<p>
+  But suppose during its allocated time a process calls <tt>receive</tt> and has to wait for a message to arrive. The scheduler is smart: it knows that it would be a waste of precious CPU cycles to continue allocating time to that blocked process. So the scheduler pre-empts (suspends) the blocked process before its scheduled time is up. That way other processes that want to do actual work aren't held up by a process that's just waiting around.
+</p>
+<p>
+  The same is true for a process that calls <tt>:timer.sleep</tt> or runs an I/O operation such as <tt>File.read</tt>. No sense giving that process any more CPU time. The scheduler dutifully pre-empts the process and then resumes it when the process wakes back up or finishes the I/O operation.
+</p>
+<p>
+  Fair, and smart. Just how you like your schedulers.
+</p>
+
+<h3>Tip: Flushing the Shell's Mailbox</h3>
+<p>
+  Suppose you've spawned some processes that send a message back to the <tt>iex</tt> shell process, like so:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">parent</span> <span class="p">=</span> <span class="n">self</span><span class="p">()</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="n">send</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="s2">"Yes"</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+<span class="n">iex</span><span class="o">&gt;</span> <span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="n">send</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="s2">"No"</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+<span class="n">iex</span><span class="o">&gt;</span> <span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="n">send</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="s2">"Maybe"</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+</pre></div>
+<p>
+  Now the mailbox of the <tt>iex</tt> process contains three messages:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="ss">:messages</span><span class="p">)</span>
+<span class="p">{</span><span class="ss">:messages</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Yes"</span><span class="p">,</span> <span class="s2">"No"</span><span class="p">,</span> <span class="s2">"Maybe"</span><span class="p">]}</span>
+</pre></div>
+<p>
+  You know you could call <tt>receive</tt> three times to consume those messages. But often times in <tt>iex</tt> you simply want to flush all the messages out of the <tt>iex</tt> process' mailbox. That's exactly what the <tt>flush</tt> helper does:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">flush</span>
+<span class="s2">"Yes"</span>
+<span class="s2">"No"</span>
+<span class="s2">"Maybe"</span>
+<span class="ss">:ok</span>
+</pre></div>
+<p>
+  It consumes all the messages in the <tt>iex</tt> process' mailbox and prints them out. As promised, the mailbox is now empty:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:messages</span><span class="p">)</span>
+<span class="p">{</span><span class="ss">:messages</span><span class="p">,</span> <span class="p">[]}</span>
+</pre></div>
+<p>
+  Now if you call <tt>flush</tt> again, it just returns <tt>:ok</tt>:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">flush</span><span class="p">()</span>
+<span class="ss">:ok</span>
+</pre></div>
+<p>
+  Why mention this? Well, the <tt>flush</tt> helper often comes in really handy when you're playing around in the <tt>iex</tt> shell. Sometimes you don't want to go to the trouble of receiving all the messages. And sometimes you just want to clear all the messages out of the mailbox to get a clean slate. With just a single <tt>flush()</tt> you can list the mailbox's messages and consume them all. Whoosh!
+</p>
+
+<h3>Exercise: Send and Receive a Message</h3>
+<p>
+  For extra practice sending and receiving messages, create a new file named <tt>power_napper.ex</tt> outside of your project. Start the file by pasting the following anonymous function:
+</p>
+<div class="highlight"><pre><span class="n">power_nap</span> <span class="p">=</span> <span class="k">fn</span> <span class="p">-&gt;</span> 
+  <span class="n">time</span> <span class="p">=</span> <span class="ss">:rand</span><span class="p">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">10_000</span><span class="p">)</span> 
+  <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+  <span class="n">time</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  This function generates a random number between 0 and 10000, sleeps for that amount of time (0 to 10 seconds), and returns how long it slept. Consider it Elixir's version of a power nap where every millisecond is like a minute of our time.
+</p>
+<p>
+  Now spawn the <tt>power_nap</tt> function in its own process and send a message back to the parent of the form <tt>{:slept, time}</tt> where the <tt>time</tt> is the amount of time the process slept. Then receive that message and print "Slept 3542 ms", for example.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">parent</span> <span class="p">=</span> <span class="n">self</span><span class="p">()</span>
+
+<span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="n">send</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="p">{</span><span class="ss">:slept</span><span class="p">,</span> <span class="n">power_nap</span><span class="p">.()})</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="k">receive</span> <span class="k">do</span> 
+  <span class="p">{</span><span class="ss">:slept</span><span class="p">,</span> <span class="n">time</span><span class="p">}</span> <span class="p">-&gt;</span> <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Slept </span><span class="si">#{</span><span class="n">time</span><span class="si">}</span><span class="s2"> ms"</span> 
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Send a Request to an API</h3>
+<p>
+  In the video we <em>simulated</em> sending a request to an API so we could focus on Elixir processes, and also because we didn't want to create a dependency on an external resource. (Added to which, we hope you aren't too disappointed to hear that a trail cam API doesn't actually exist.)
+</p>
+<p>
+  Now that you know how to spawn a simulated API request and send back the response as a message, you might be wondering how you'd actually, you know, send a request to an external API and parse the response. Turns out all you need is an Elixir library and some pattern matching. You could certainly do this on your own, but to save you time we'll walk you through the steps below.
+</p>
+<p>
+  First we need an HTTP client for Elixir, and <a href="https://github.com/edgurgel/httpoison" target="_blank">HTTPoison</a> is a popular choice. Add it as a dependency in <tt>mix.exs</tt>:
+</p>
+<div class="highlight"><pre><span class="kd">defp</span> <span class="n">deps</span> <span class="k">do</span>
+  <span class="p">[{</span><span class="ss">:poison</span><span class="p">,</span> <span class="s2">"~&gt; 3.1"</span><span class="p">},</span>
+<span class="hll">   <span class="p">{</span><span class="ss">:httpoison</span><span class="p">,</span> <span class="s2">"~&gt; 0.12.0"</span><span class="p">}</span>
+</span>  <span class="p">]</span>
+<span class="k">end</span>
+</pre></div>
+<p></p>
+<p>
+  Yes, this is sounding frightfully poisonous, but go ahead and download it:
+</p>
+<pre>mix deps.get</pre>
+<p>
+  As an example JSON API you can experiment with, we created <a href="https://api.myjson.com/bins/16x3i5?pretty=true" target="_blank">https://api.myjson.com/bins/16x3i5</a>. Hit that with your browser and you should see the following JSON:
+</p>
+<pre>{
+  "image": {
+    "image_width": 500,
+    "image_height": 500,
+    "image_url": "https://images.example.com/bear.jpg"
+  }
+}</pre>
+<p>
+  Again, this is just an example; your API will certainly return different JSON. But for demonstration purposes, suppose we want to send a request to this API and extract the value of the <tt>image_url</tt> field out of the response. The <tt>image_url</tt> field is nested in the <tt>image</tt> object which is representative of the type of nested structures commonly returned by JSON APIs.
+</p>
+<p>
+  OK, now fire up an <tt>iex</tt> session so we can get a feel for how HTTPoison works.
+</p>
+<p>
+  To send an HTTP GET request, just call <tt>HTTPoison.get</tt> with a URL:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span> <span class="s2">"https://api.myjson.com/bins/16x3i5"</span>
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span>
+ <span class="p">%</span><span class="nc">HTTPoison.Response</span><span class="p">{</span>
+  <span class="ss">body</span><span class="p">:</span> <span class="s2">"..."</span><span class="p">,</span>
+  <span class="ss">headers</span><span class="p">:</span> <span class="p">[...],</span>
+  <span class="ss">request_url</span><span class="p">:</span> <span class="s2">"https://api.myjson.com/bins/16x3i5"</span><span class="p">,</span> 
+  <span class="ss">status_code</span><span class="p">:</span> <span class="mi">200</span>
+ <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+  Success! Notice the return value is a tuple whose first element is the atom <tt>:ok</tt> and whose second element is an <tt>HTTPoison.Response</tt> struct.
+</p>
+<p>
+  Let's use a pattern on the left-hand side to bind that struct to a <tt>response</tt> variable:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">}</span> <span class="p">=</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span> <span class="s2">"https://api.myjson.com/bins/16x3i5"</span>
+</pre></div>
+<p>
+  Now we can get the status and body by accessing the struct's members:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span>
+<span class="mi">200</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="n">response</span><span class="p">.</span><span class="n">body</span>
+<span class="s2">"{"</span><span class="n">image</span><span class="s2">":{"</span><span class="n">image_width</span><span class="s2">":500,"</span><span class="n">image_height</span><span class="s2">":500,"</span><span class="n">image_url</span><span class="s2">":"</span><span class="n">https</span><span class="ss">:/</span><span class="o">/</span><span class="n">images</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="n">bear</span><span class="p">.</span><span class="n">jpg</span><span class="s2">"}}"</span>
+</pre></div>
+<p>
+  We see that the body is a JSON string and we'd like to parse that string into an Elixir map so we can easily pluck out specific values. You may recall from an earlire exercise that we can call the <tt>Poison.Parser.parse!</tt> function to do exactly that:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">body_map</span> <span class="p">=</span> <span class="nc">Poison.Parser</span><span class="p">.</span><span class="n">parse!</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">body</span><span class="p">)</span>
+<span class="p">%{</span><span class="s2">"image"</span> <span class="p">=&gt;</span> 
+  <span class="p">%{</span><span class="s2">"image_height"</span> <span class="p">=&gt;</span> <span class="mi">500</span><span class="p">,</span>
+    <span class="s2">"image_url"</span> <span class="p">=&gt;</span> <span class="s2">"https://images.example.com/bear.jpg"</span><span class="p">,</span> 
+    <span class="s2">"image_width"</span> <span class="p">=&gt;</span> <span class="mi">500</span><span class="p">}}</span>
+</pre></div>
+<p>
+  Cool, now we have a map of key/value pairs. Our aim is to extract the value of the <tt>image_url</tt> field which we can do by chaining a couple <tt>Map.get</tt> calls together:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">image_url</span> <span class="p">=</span> <span class="n">body_map</span> <span class="o">|&gt;</span> <span class="nc">Map</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"image"</span><span class="p">)</span> <span class="o">|&gt;</span> <span class="nc">Map</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"image_url"</span><span class="p">)</span>
+<span class="s2">"https://images.example.com/bear.jpg"</span>
+</pre></div>
+<p>
+  That works, but stepping through a nested structure one level at a time like this is tedious. A more direct approach is to use the <a href="https://hexdocs.pm/elixir/master/Kernel.html#get_in/2" target="_blank">&gt;get_in</a> function which is defined in the <tt>Kernel</tt> module. That function was designed to make it easy to get a value from a nested structure:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">image_url</span> <span class="p">=</span> <span class="n">get_in</span><span class="p">(</span><span class="n">body_map</span><span class="p">,</span> <span class="p">[</span><span class="s2">"image"</span><span class="p">,</span> <span class="s2">"image_url"</span><span class="p">])</span>
+<span class="s2">"https://images.example.com/bear.jpg"</span>
+</pre></div>
+<p>
+  Nice! We pass it two arguments: the map and a list of keys (think of it like a path). The <tt>get_in</tt> function uses the path to drill down into the map and returns the respective value.
+</p>
+<p>
+  OK, so now you know the happy path for sending a request and parsing the response. How would you encapsulate this in a module that handled both success and failure cases? 
+</p>
+<p>
+  To do that you'll need to match three patterns. First, if everything goes as planned, sending a request will return a response with a 200 status code:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span> <span class="s2">"https://api.myjson.com/bins/16x3i5"</span>
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span>
+ <span class="p">%</span><span class="nc">HTTPoison.Response</span><span class="p">{</span>
+  <span class="ss">body</span><span class="p">:</span> <span class="s2">"{"</span><span class="n">image</span><span class="s2">":{"</span><span class="n">image_width</span><span class="s2">":500,"</span><span class="n">image_height</span><span class="s2">":500,"</span><span class="n">image_url</span><span class="s2">":"</span><span class="n">https</span><span class="ss">:/</span><span class="o">/</span><span class="n">images</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="n">bear</span><span class="p">.</span><span class="n">jpg</span><span class="s2">"}}"</span><span class="p">,</span>
+  <span class="ss">headers</span><span class="p">:</span> <span class="p">[...],</span>
+  <span class="ss">request_url</span><span class="p">:</span> <span class="s2">"https://api.myjson.com/bins/16x3i5"</span><span class="p">,</span> 
+  <span class="ss">status_code</span><span class="p">:</span> <span class="mi">200</span>
+ <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+  So a successful request returns a result that matches the following pattern:
+</p>
+<div class="highlight"><pre><span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="p">%</span><span class="nc">HTTPoison.Response</span><span class="p">{</span><span class="ss">status_code</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">body</span><span class="p">:</span> <span class="n">body</span><span class="p">}}</span>
+</pre></div>
+<p>
+  OK, but what if the status code isn't a 200? For example, sending the following request should return a response with a 500 status code and a 
+  <tt>body</tt> field with a JSON string that represents the error:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span> <span class="s2">"https://api.myjson.com/bins/abcdefg"</span>
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="p">%</span><span class="nc">HTTPoison.Response</span><span class="p">{</span>
+  <span class="ss">body</span><span class="p">:</span> <span class="s2">"{"</span><span class="n">status</span><span class="s2">":500,"</span><span class="n">message</span><span class="s2">":"</span><span class="nc">Internal</span> <span class="nc">Server</span> <span class="nc">Error</span><span class="s2">"}"</span><span class="p">,</span>
+  <span class="ss">headers</span><span class="p">:</span> <span class="p">[...],</span>
+  <span class="ss">request_url</span><span class="p">:</span> <span class="s2">"https://api.myjson.com/bins/abcdefg"</span><span class="p">,</span> 
+  <span class="ss">status_code</span><span class="p">:</span> <span class="mi">500</span>
+<span class="p">}}</span>
+</pre></div>
+<p>
+  So a request can return a result that has <tt>:ok</tt> as the first element of the tuple, but then has a status code that's not a 200. That's the second pattern you'll need to match:
+</p>
+<div class="highlight"><pre><span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="p">%</span><span class="nc">HTTPoison.Response</span><span class="p">{</span><span class="ss">status_code</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span> <span class="ss">body</span><span class="p">:</span> <span class="n">body</span><span class="p">}}</span>
+</pre></div>
+<p>
+  Finally, you need to handle the case where sending the request results in an error such as not being able to connect to the server. For example, look what happens if we drop the <tt>.com</tt> part of the domain:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span> <span class="s2">"https://api.myjson"</span>
+<span class="p">{</span><span class="ss">:error</span><span class="p">,</span> <span class="p">%</span><span class="nc">HTTPoison.Error</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="no">nil</span><span class="p">,</span> <span class="ss">reason</span><span class="p">:</span> <span class="ss">:econnrefused</span><span class="p">}}</span>
+</pre></div>
+<p>
+  Ah, that returns an altogether different tuple. The first element is now <tt>:error</tt> rather than <tt>:ok</tt> and the second element is an <tt>HTTPoison.Error</tt> struct rather than an <tt>HTTPoison.Response</tt> struct. Conveniently, the reason for the error is indicated in the <tt>reason</tt> field.
+</p>
+<p>
+  That's the third pattern you'll need to match:
+</p>
+<div class="highlight"><pre><span class="p">{</span><span class="ss">:error</span><span class="p">,</span> <span class="p">%</span><span class="nc">HTTPoison.Error</span><span class="p">{</span><span class="ss">reason</span><span class="p">:</span> <span class="n">reason</span><span class="p">}}</span>
+</pre></div>
+<p>
+  OK, now it's your turn. Create a module named <tt>ImageApi</tt> that encapsulates all the sending and parsing details so you can get the image URL for a given id or handle any errors like so:
+</p>
+<div class="highlight"><pre><span class="k">case</span> <span class="nc">ImageApi</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s2">"16x3i5"</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">image_url</span><span class="p">}</span> <span class="p">-&gt;</span>
+    <span class="n">image_url</span>
+  <span class="p">{</span><span class="ss">:error</span><span class="p">,</span> <span class="n">error</span><span class="p">}</span> <span class="p">-&gt;</span>
+    <span class="s2">"Whoops! </span><span class="si">#{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Given that id, it should send a request to <a href="https://api.myjson.com/bins/16x3i5?pretty=true" target="_blank">https://api.myjson.com/bins/16x3i5</a>.
+</p>
+<p>
+  To do that, you'll need three function clauses that match the three patterns we identified above. If the request is successful, return <tt>{:ok, image_url}</tt>. If the request has a non-200 status code, return <tt>{:error, error}</tt> where <tt>error</tt> is bound to the value of the <tt>message</tt> field of the JSON string in the response body. And for all real errors, return <tt>{:error, error}</tt> where <tt>error</tt> is bound to the reason.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">ImageApi</span> <span class="k">do</span>
+  <span class="kd">def</span> <span class="n">query</span><span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">api_url</span><span class="p">(</span><span class="n">id</span><span class="p">)</span> 
+    <span class="o">|&gt;</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span>
+    <span class="o">|&gt;</span> <span class="n">handle_response</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">api_url</span><span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="k">do</span>
+    <span class="s2">"https://api.myjson.com/bins/</span><span class="si">#{</span><span class="nc">URI</span><span class="p">.</span><span class="n">encode</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">handle_response</span><span class="p">({</span><span class="ss">:ok</span><span class="p">,</span> <span class="p">%{</span><span class="ss">status_code</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">body</span><span class="p">:</span> <span class="n">body</span><span class="p">}})</span> <span class="k">do</span>
+    <span class="n">image_url</span> <span class="p">=</span> 
+      <span class="n">body</span> 
+      <span class="o">|&gt;</span> <span class="nc">Poison.Parser</span><span class="p">.</span><span class="n">parse!</span> 
+      <span class="o">|&gt;</span> <span class="n">get_in</span><span class="p">([</span><span class="s2">"image"</span><span class="p">,</span> <span class="s2">"image_url"</span><span class="p">])</span>
+
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">image_url</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">handle_response</span><span class="p">({</span><span class="ss">:ok</span><span class="p">,</span> <span class="p">%{</span><span class="ss">status_code</span><span class="p">:</span> <span class="n">_status</span><span class="p">,</span> <span class="ss">body</span><span class="p">:</span> <span class="n">body</span><span class="p">}})</span> <span class="k">do</span>
+    <span class="n">message</span> <span class="p">=</span> 
+      <span class="n">body</span> 
+      <span class="o">|&gt;</span> <span class="nc">Poison.Parser</span><span class="p">.</span><span class="n">parse!</span> 
+      <span class="o">|&gt;</span> <span class="n">get_in</span><span class="p">([</span><span class="s2">"message"</span><span class="p">])</span>
+
+    <span class="p">{</span><span class="ss">:error</span><span class="p">,</span> <span class="n">message</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">handle_response</span><span class="p">({</span><span class="ss">:error</span><span class="p">,</span> <span class="p">%{</span><span class="ss">reason</span><span class="p">:</span> <span class="n">reason</span><span class="p">}})</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:error</span><span class="p">,</span> <span class="n">reason</span><span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  When you're finished, if you stand back and squint at the module, you'll likely see how it can be tweaked to query virtually any API. The only thing specific to images is the API endpoint and the paths that are passed to the <tt>get_in</tt> function. So feel free to use this as a starting point to query your API!
+</p>
+
+<h3>Exercise: Use HTTPoison In Your HttpServerTest</h3>
+<p> 
+  Since you now have <a href="https://github.com/edgurgel/httpoison" target="_blank">HTTPoison</a> installed in your project, you can optionally use <tt>HTTPoison</tt> instead of your <tt>HttpClient</tt> to send requests to the <tt>HttpServer</tt> module in the <tt>HttpServerTest</tt> you wrote
+  in an earlier exercise. 
+</p>
+<p>
+  The advantage of using HTTPoison is don't have to worry about creating HTTP request and response strings. Instead, you can send an HTTP request simply by calling <tt>HTTPoison.get</tt> with a URL and then assert the contents of the <tt>status_code</tt> and <tt>body</tt> fields of the resulting <tt>HTTPoison.Response</tt> struct.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">HttpServerTest</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">ExUnit.Case</span>
+
+  <span class="kn">alias</span> <span class="nc">Servy.HttpServer</span>
+
+  <span class="n">test</span> <span class="s2">"accepts a request on a socket and sends back a response"</span> <span class="k">do</span>
+    <span class="n">spawn</span><span class="p">(</span><span class="nc">HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">}</span> <span class="p">=</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span> <span class="s2">"http://localhost:4000/wildthings"</span>
+
+    <span class="n">assert</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+    <span class="n">assert</span> <span class="n">response</span><span class="p">.</span><span class="n">body</span> <span class="o">==</span> <span class="s2">"Bears, Lions, Tigers"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Change HttpServerTest to Send Concurrent Requests</h3>
+<p>
+  Change the test you wrote in the previous exercise to send 5 requests concurrently. To do that, you'll need to spawn functions that issue the request and send the response back to the parent process. The parent process needs to await <em>all</em> messages from the spawned processes and assert the contents of their response.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">test</span> <span class="s2">"accepts a request on a socket and sends back a response"</span> <span class="k">do</span>
+  <span class="n">spawn</span><span class="p">(</span><span class="nc">HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+
+  <span class="n">parent</span> <span class="p">=</span> <span class="n">self</span><span class="p">()</span>
+
+  <span class="n">max_concurrent_requests</span> <span class="p">=</span> <span class="mi">5</span>
+
+  <span class="c1"># Spawn the client processes</span>
+  <span class="k">for</span> <span class="bp">_</span> <span class="p">&lt;-</span> <span class="mi">1</span><span class="p">..</span><span class="n">max_concurrent_requests</span> <span class="k">do</span>
+    <span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span>
+      <span class="c1"># Send the request</span>
+      <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">}</span> <span class="p">=</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span> <span class="s2">"http://localhost:4000/wildthings"</span>
+
+      <span class="c1"># Send the response back to the parent</span>
+      <span class="n">send</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">})</span>
+    <span class="k">end</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="c1"># Await all {:handled, response} messages from spawned processes.</span>
+  <span class="k">for</span> <span class="bp">_</span> <span class="p">&lt;-</span> <span class="mi">1</span><span class="p">..</span><span class="n">max_concurrent_requests</span> <span class="k">do</span>
+    <span class="k">receive</span> <span class="k">do</span> 
+      <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">}</span> <span class="p">-&gt;</span> 
+        <span class="n">assert</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+        <span class="n">assert</span> <span class="n">response</span><span class="p">.</span><span class="n">body</span> <span class="o">==</span> <span class="s2">"Bears, Lions, Tigers"</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Check Out <em>This</em> Bear Cam</h3>
+<p>
+  Take a well-deserved break while enjoying this humorous <a href="https://www.youtube.com/watch?v=l6yuv_-I4Z0" target="_blank">2-minute BBC Planet Earth II video</a> of bears scratching on trees (and imagine they're on a wildlife refuge). 🐻 🌲
+</p>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>messages</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/728/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/26 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./13The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./13The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./13The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="eTBS+SnBRFBu0nnsUkslcv3gDje2T4dz+Bc1cYZZlvESOXer2a0CmqNYlcmo9Qx/StLjg7xm/rtRK8GxKW6j6Q==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./13The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Handle POST Requests</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>HTTP POST Request</h3>
+<p>
+  Here's the raw POST request we pasted in the video:
+</p>
+<pre>request = """
+POST /bears HTTP/1.1
+Host: example.com
+User-Agent: ExampleBrowser/1.0
+Accept: */*
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 21
+
+name=Baloo&amp;type=Brown
+"""
+
+response = Servy.Handler.handle(request)
+
+IO.puts response</pre>
+<p>
+  And here's the starting point we used for the 
+  matching <tt>route</tt> function:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">route</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"POST"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/bears"</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="s2">"Create a bear!"</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+
+<h3>Linking Heads and Tails</h3>
+<p>
+  The familiar way to make a list is by separating each element 
+  by a comma:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">nums</span> <span class="p">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+<p>
+  But now you know that a list is either empty or it consists of a 
+  head and a tail which is itself a list. It follows then that  
+  you can create the same list using the <tt>[head | tail]</tt> expression:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">nums</span> <span class="p">=</span> <span class="p">[</span><span class="mi">1</span> <span class="p">|</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+<p>
+  In the same way, you can add elements to the head of a list (prepend)
+  using the <tt>[head | tail]</tt> expression:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="p">[</span><span class="mi">0</span> <span class="p">|</span> <span class="n">nums</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+<p>
+  And if you wanted to take the <em>long</em> way around the barn,
+  you could create the list of numbers 0-3 as a series of heads
+  and tails like so:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="p">[</span><span class="mi">0</span> <span class="p">|</span> <span class="p">[</span><span class="mi">1</span> <span class="p">|</span> <span class="p">[</span><span class="mi">2</span> <span class="p">|</span> <span class="p">[</span><span class="mi">3</span> <span class="p">|</span> <span class="p">[]]]]]</span>
+<span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+<p>
+  Doesn't that make you appreciate the comma-separated syntax all the more?
+  The point is that a list in Elixir is implemented 
+  as a series of linked lists. The head is always the
+  first element of the list. The tail "points" or 
+  "links" to the list that consists of the head and tail 
+  of the remaining elements. So lists are by definition
+  recursive data structures!
+</p>
+
+<h3>Accessing Head and Tail with Functions</h3>
+<p>
+  The head and tail of a list can also be accessed with the 
+  functions <tt>hd</tt> and <tt>tl</tt>:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">nums</span> <span class="p">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="n">hd</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span>
+<span class="mi">1</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="n">tl</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span>
+<span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+<p>
+  The <tt>hd</tt> and <tt>tl</tt> functions are defined in the 
+  <tt>Kernel</tt> module which is automatically imported into 
+  every module so you don't have to prefix the function with
+  the module name.
+</p>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>post-requests</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/702/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

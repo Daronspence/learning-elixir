@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/39 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./19The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./19The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./19The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="pfc/5ovxFwGUaqcwohSAe8jI58gDDaXDsupNFUmbIGvO/hq0e51Ry1ngSxVYqql2f/oKfAkk3Asb1rnV5qwVcw==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./19The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Rendering JSON</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>API Test</h3>
+<p>
+  Here's the test we started with in the video. Paste it into your <tt>handler_test.exs</tt> file and you're ready to go!
+</p>
+<div class="highlight"><pre><span class="n">test</span> <span class="s2">"GET /api/bears"</span> <span class="k">do</span>
+  <span class="n">request</span> <span class="p">=</span> <span class="sh">"""</span>
+<span class="sh">  GET /api/bears HTTP/1.1</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Host: example.com</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  User-Agent: ExampleBrowser/1.0</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Accept: */*</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  """</span>
+
+  <span class="n">response</span> <span class="p">=</span> <span class="n">handle</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+  <span class="n">expected_response</span> <span class="p">=</span> <span class="sh">"""</span>
+<span class="sh">  HTTP/1.1 200 OK</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Content-Type: application/json</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Content-Length: 605</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  [{"type":"Brown","name":"Teddy","id":1,"hibernating":true},</span>
+<span class="sh">   {"type":"Black","name":"Smokey","id":2,"hibernating":false},</span>
+<span class="sh">   {"type":"Brown","name":"Paddington","id":3,"hibernating":false},</span>
+<span class="sh">   {"type":"Grizzly","name":"Scarface","id":4,"hibernating":true},</span>
+<span class="sh">   {"type":"Polar","name":"Snow","id":5,"hibernating":false},</span>
+<span class="sh">   {"type":"Grizzly","name":"Brutus","id":6,"hibernating":false},</span>
+<span class="sh">   {"type":"Black","name":"Rosie","id":7,"hibernating":true},</span>
+<span class="sh">   {"type":"Panda","name":"Roscoe","id":8,"hibernating":false},</span>
+<span class="sh">   {"type":"Polar","name":"Iceman","id":9,"hibernating":true},</span>
+<span class="sh">   {"type":"Grizzly","name":"Kenai","id":10,"hibernating":false}]</span>
+<span class="sh">  """</span>
+
+  <span class="n">assert</span> <span class="n">remove_whitespace</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="o">==</span> <span class="n">remove_whitespace</span><span class="p">(</span><span class="n">expected_response</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+
+<h3>Organizing Code</h3>
+<p>
+  In the video we created the <tt>api</tt> directory as a sub-directory of the
+  <tt>lib</tt> directory. You can organize code however you like in arbitrary directories under <tt>lib</tt>. For example, you could create a <tt>lib/controllers</tt> directory where all the controller files live.
+</p>
+
+<h3>Tip: Dependency Version Format</h3>
+<p>
+  In the video we specified our application's dependency on the 
+  <a href="https://hex.pm/packages/poison" target="_blank">poison</a> library in the <tt>mix.exs</tt> file like so:
+</p>
+<div class="highlight"><pre><span class="kd">defp</span> <span class="n">deps</span> <span class="k">do</span>
+  <span class="p">[{</span><span class="ss">:poison</span><span class="p">,</span> <span class="s2">"~&gt; 3.1"</span><span class="p">}]</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  As an example of multiple dependencies, here's how to also add a 
+  dependency on the <a href="https://hex.pm/packages/faker" target="_blank">faker</a> library:
+</p>
+<div class="highlight"><pre><span class="kd">defp</span> <span class="n">deps</span> <span class="k">do</span>
+  <span class="p">[{</span><span class="ss">:poison</span><span class="p">,</span> <span class="s2">"~&gt; 3.1"</span><span class="p">},</span> <span class="p">{</span><span class="ss">:faker</span><span class="p">,</span> <span class="s2">"~&gt; 0.8.0"</span><span class="p">}]</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Notice it's a list of tuples with each tuple having two elements: a package name (an atom) and the version.
+</p>
+<p>
+  So how do you remember what the version format means? If you're ever in doubt, type <tt>h Version</tt> in an <tt>iex</tt> session to see a list of examples and explanations.
+</p>
+
+<h3>Exercise: Support Multiple Response Headers</h3>
+<p>
+  In the video, to support different content types we first added a <tt>resp_content_type</tt> field to the <tt>Conv</tt> struct. It defaults to a value of <tt>"text/html"</tt>: 
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.Conv</span> <span class="k">do</span>
+  <span class="kd">defstruct</span> <span class="ss">method</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> 
+            <span class="ss">path</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> 
+            <span class="ss">params</span><span class="p">:</span> <span class="p">%{},</span>
+            <span class="ss">headers</span><span class="p">:</span> <span class="p">%{},</span>
+<span class="hll">            <span class="ss">resp_content_type</span><span class="p">:</span> <span class="s2">"text/html"</span><span class="p">,</span>
+</span>            <span class="ss">resp_body</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> 
+            <span class="ss">status</span><span class="p">:</span> <span class="no">nil</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  We then changed the <tt>Handler.format_response</tt> function to interpolate the content type:
+</p>
+<pre>Content-Type: #{conv.resp_content_type}\r</pre>
+<p>
+  That allowed us to set the content type to <tt>"application/json"</tt> (overriding the default) when generating a JSON response: 
+</p>
+<div class="highlight"><pre><span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_content_type</span><span class="p">:</span> <span class="s2">"application/json"</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="n">json</span> <span class="p">}</span>
+</pre></div>
+<p>
+  We mentioned that as an exercise you could instead store the response headers in a map, similar to how request headers are stored in a map. For example, you could rename the <tt>resp_content_type</tt> field to <tt>resp_headers</tt> and initialize it with a default map like so:
+</p>
+<div class="highlight"><pre><span class="ss">resp_headers</span><span class="p">:</span> <span class="p">%{</span><span class="s2">"Content-Type"</span> <span class="p">=&gt;</span> <span class="s2">"text/html"</span><span class="p">},</span>
+</pre></div>
+<p>
+  Using a map gives you the flexibility to also store other HTTP response headers. For example, <tt>Content-Length</tt> is another response header and servers typically tack on other headers depending on the situation.
+</p>
+<p>
+  If you're keen to try this approach, give it a whirl!
+</p>
+<p>
+First, change the <tt>Handler.format_response</tt> function to interpolate the <tt>Content-Type</tt> value stored in the <tt>resp_headers</tt> map.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <pre>Content-Type: #{conv.resp_headers["Content-Type"]}\r</pre>
+        </div>
+      </div>
+
+<p>
+  Then change the <tt>index</tt> function of the <tt>Servy.Api.BearController</tt> to set the <tt>Content-Type</tt> to <tt>"application/json"</tt> by updating the <tt>resp_headers</tt> map. Hint: You'll need to use <tt>Map.put</tt> to do that.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">index</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">json</span> <span class="p">=</span>
+    <span class="nc">Servy.Wildthings</span><span class="p">.</span><span class="n">list_bears</span><span class="p">()</span>
+    <span class="o">|&gt;</span> <span class="nc">Poison</span><span class="p">.</span><span class="n">encode!</span>
+
+<span class="hll">  <span class="n">new_headers</span> <span class="p">=</span> <span class="nc">Map</span><span class="p">.</span><span class="n">put</span><span class="p">(</span><span class="n">conv</span><span class="p">.</span><span class="n">resp_headers</span><span class="p">,</span> <span class="s2">"Content-Type"</span><span class="p">,</span> <span class="s2">"application/json"</span><span class="p">)</span>
+</span>  
+<span class="hll">  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_headers</span><span class="p">:</span> <span class="n">new_headers</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="n">json</span> <span class="p">}</span>
+</span><span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then for style points, define a <tt>put_resp_content_type/2</tt> function that neatly encapsulates setting the content type. It will take two arguments: a <tt>Conv</tt> map and an arbitrary content type (a string). The function will return an updated <tt>Conv</tt> with the <tt>resp_headers</tt> map update to include a <tt>Content-Type</tt> set to the given content type. Your goal is to be able to call <tt>put_resp_content_type/2</tt> like so:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">index</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">json</span> <span class="p">=</span>
+    <span class="nc">Servy.Wildthings</span><span class="p">.</span><span class="n">list_bears</span><span class="p">()</span>
+    <span class="o">|&gt;</span> <span class="nc">Poison</span><span class="p">.</span><span class="n">encode!</span>
+
+<span class="hll">  <span class="n">conv</span> <span class="p">=</span> <span class="n">put_resp_content_type</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="s2">"application/json"</span><span class="p">)</span>
+</span>  
+<span class="hll">  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="n">json</span> <span class="p">}</span>
+</span><span class="k">end</span>
+</pre></div>
+<p>
+  Again, it simply encapsulates setting the content type. Notice you don't have to update <tt>resp_headers</tt> on the last line because <tt>put_resp_content_type</tt> does that for you.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">put_resp_content_type</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">type</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">headers</span> <span class="p">=</span> <span class="nc">Map</span><span class="p">.</span><span class="n">put</span><span class="p">(</span><span class="n">conv</span><span class="p">.</span><span class="n">resp_headers</span><span class="p">,</span> <span class="s2">"Content-Type"</span><span class="p">,</span> <span class="n">type</span><span class="p">)</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">resp_headers</span><span class="p">:</span> <span class="n">headers</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Now that you have a map of response headers, you can take this a step further by storing the <tt>Content-Length</tt> in the <tt>resp_headers</tt> as well. Currently we're calculating the content length in the <tt>Handler.format_response</tt> function like so:
+</p>
+<pre>Content-Length: #{String.length(conv.resp_body)}\r</pre>
+<p>
+  Instead you can store the calculated content length in the <tt>resp_headers</tt> map. To do that, define a <tt>put_content_length/1</tt> function that takes a <tt>Conv</tt> map and returns an updated <tt>Conv</tt> map with the <tt>Content-Length</tt> set to the length of the current response body. Your goal is to be able to call <tt>put_content_length/1</tt> in the <tt>Handler.handle</tt> pipeline, right before the <tt>format_response</tt> step, like so:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">handle</span><span class="p">(</span><span class="n">request</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">request</span> 
+  <span class="o">|&gt;</span> <span class="n">parse</span>
+  <span class="o">|&gt;</span> <span class="n">rewrite_path</span>
+  <span class="o">|&gt;</span> <span class="n">log</span> 
+  <span class="o">|&gt;</span> <span class="n">route</span> 
+  <span class="o">|&gt;</span> <span class="n">track</span>
+<span class="hll">  <span class="o">|&gt;</span> <span class="n">put_content_length</span>
+</span>  <span class="o">|&gt;</span> <span class="n">format_response</span>
+<span class="k">end</span>
+</pre></div>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">put_content_length</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">headers</span> <span class="p">=</span> <span class="nc">Map</span><span class="p">.</span><span class="n">put</span><span class="p">(</span><span class="n">conv</span><span class="p">.</span><span class="n">resp_headers</span><span class="p">,</span> <span class="s2">"Content-Length"</span><span class="p">,</span> <span class="nc">String</span><span class="p">.</span><span class="n">length</span><span class="p">(</span><span class="n">conv</span><span class="p">.</span><span class="n">resp_body</span><span class="p">))</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">resp_headers</span><span class="p">:</span> <span class="n">headers</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+Then you can change the <tt>Handler.format_response</tt> function to simply interpolate the content length in the <tt>resp_headers</tt> map rather than computing it.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <pre>Content-Length: #{conv.resp_headers["Content-Length"]}\r</pre>
+        </div>
+      </div>
+
+<p>
+  If you want to try something a bit more advanced, imagine you have an arbitrary number of response headers and you want to <em>dynamically</em> generate a multi-line string of all the response header keys and values. You could then interpolate that string in the <tt>Handler.format_response</tt> function, like so
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">format_response</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="sh">"""</span>
+<span class="sh">  HTTP/1.1 </span><span class="si">#{</span><span class="nc">Conv</span><span class="p">.</span><span class="n">full_status</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span><span class="si">}</span><span class="se">\r</span><span class="sh"></span>
+<span class="hll"><span class="sh">  </span><span class="si">#{</span><span class="n">format_response_headers</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span><span class="si">}</span><span class="sh"></span>
+</span><span class="sh">  </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  </span><span class="si">#{</span><span class="n">conv</span><span class="p">.</span><span class="n">resp_body</span><span class="si">}</span><span class="sh"></span>
+<span class="sh">  """</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Define a <tt>format_response_headers/1</tt> function that fits the bill. There are at least two ways to do it: using <tt>Enum.map</tt> or using a comprehension. Since the <tt>resp_headers</tt> map is unordered, to keep your tests passing you'll need to sort the response headers in the expected order. 
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="c1"># using Enum.map:</span>
+
+<span class="kd">defp</span> <span class="n">format_response_headers</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">conv</span><span class="p">.</span><span class="n">resp_headers</span><span class="p">,</span> <span class="k">fn</span> <span class="p">{</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">}</span> <span class="p">-&gt;</span>
+    <span class="s2">"</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">value</span><span class="si">}</span><span class="se">\r</span><span class="s2">"</span>
+  <span class="k">end</span><span class="p">)</span> <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">sort</span> <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">reverse</span> <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="c1"># or using a comprehension:</span>
+
+<span class="kd">defp</span> <span class="n">format_response_headers</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="k">for</span> <span class="p">{</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">conv</span><span class="p">.</span><span class="n">resp_headers</span> <span class="k">do</span>
+    <span class="s2">"</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">value</span><span class="si">}</span><span class="se">\r</span><span class="s2">"</span>
+  <span class="k">end</span> <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">sort</span> <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">reverse</span> <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Handle POSTed JSON Data</h3>
+<p>
+  In the video we used the <a href="https://github.com/devinus/poison" target="_blank">poison</a> library to encode Elixir as JSON. You can also use the library to parse a JSON string into an Elixir map. For example, suppose you have the following JSON string:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">json</span> <span class="p">=</span> <span class="sx">~s({"name": "Breezly", "type": "Polar"})</span>                           
+<span class="s2">"{"</span><span class="n">name</span><span class="s2">": "</span><span class="nc">Breezly</span><span class="s2">", "</span><span class="n">type</span><span class="s2">": "</span><span class="nc">Polar</span><span class="s2">"}"</span>
+</pre></div>
+<p>
+  <em>We used the <tt>~s</tt> sigil to generate the double-quoted string so we didn't have to escape the double quotes contained in the string.</em>
+</p>
+<p>
+  You can then call the <tt>Poison.Parser.parse!</tt> function to parse the JSON string into an Elixir map:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Poison.Parser</span><span class="p">.</span><span class="n">parse!</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
+<span class="p">%{</span><span class="s2">"name"</span> <span class="p">=&gt;</span> <span class="s2">"Breezly"</span><span class="p">,</span> <span class="s2">"type"</span> <span class="p">=&gt;</span> <span class="s2">"Polar"</span><span class="p">}</span>
+</pre></div>
+<p>
+  When might you want to do that? Well, suppose we want our API to accept JSON as the data of a POST request to create a new bear. Here's a test that expresses how that should work:
+</p>
+<div class="highlight"><pre><span class="n">test</span> <span class="s2">"POST /api/bears"</span> <span class="k">do</span>
+  <span class="n">request</span> <span class="p">=</span> <span class="sh">"""</span>
+<span class="sh">  POST /api/bears HTTP/1.1</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Host: example.com</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  User-Agent: ExampleBrowser/1.0</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Accept: */*</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Content-Type: application/json</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Content-Length: 21</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  {"name": "Breezly", "type": "Polar"}</span>
+<span class="sh">  """</span>
+
+  <span class="n">response</span> <span class="p">=</span> <span class="n">handle</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+  <span class="n">assert</span> <span class="n">response</span> <span class="o">==</span> <span class="sh">"""</span>
+<span class="sh">  HTTP/1.1 201 Created</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Content-Type: text/html</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Content-Length: 35</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Created a Polar bear named Breezly!</span>
+<span class="sh">  """</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  In this case the request is a <tt>POST</tt> to the API endpoint <tt>/api/bears</tt> whereas in the video we implemented a <tt>GET</tt> request to the same endpoint. Notice that the <tt>Content-Type</tt> is <tt>application/json</tt> which tells the server that the body of the request (the last line) is JSON. Then, as promised, the last line of the request is a JSON string representing the bear that we want to create.
+</p>
+<p>
+  <strong>Your exercise, if you choose to accept it, is to write the code that makes the test pass!</strong>
+</p>
+<p>
+  Give it an honest try on your own, and then check your work in the steps below:
+</p>
+<ul>
+  <li>
+    <p>
+      In <tt>api/bear_controller.ex</tt>, define a <tt>create</tt> action that responds with the status code and body expected by the test.
+    </p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">create</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="p">%{</span><span class="s2">"name"</span> <span class="p">=&gt;</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"type"</span> <span class="p">=&gt;</span> <span class="n">type</span><span class="p">})</span> <span class="k">do</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="s2">"Created a </span><span class="si">#{</span><span class="n">type</span><span class="si">}</span><span class="s2"> bear named </span><span class="si">#{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+  </li>
+  <li>
+    <p>
+      In <tt>handler.ex</tt>, add a route that matches a <tt>POST</tt> request for the path <tt>/api/bears</tt>. Delegate it to the <tt>create</tt> action you defined in the previous step.
+    </p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">route</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"POST"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/api/bears"</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">Servy.Api.BearController</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">conv</span><span class="p">.</span><span class="n">params</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+  </li>
+  <li>
+    <p>
+      The <tt>Parser</tt> module in <tt>parser.ex</tt> currently only supports POSTed data that has a <tt>Content-Type</tt> of <tt>application/x-www-form-urlencoded</tt>. To accept data POSTed as <tt>application/json</tt>, add a <tt>parse_params</tt> function clause that matches that content type and parses the POSTed JSON string into an Elixir map.
+    </p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">parse_params</span><span class="p">(</span><span class="s2">"application/json"</span><span class="p">,</span> <span class="n">params_string</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">Poison.Parser</span><span class="p">.</span><span class="n">parse!</span><span class="p">(</span><span class="n">params_string</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+  </li>
+</ul>
+
+<h3>Exercise: Read Bears from a JSON File</h3>
+<p>
+  If you want more practice with the <a href="https://github.com/devinus/poison" target="_blank">poison</a> library (and Elixir in general), suppose rather than hard-coding the list of bears in the <tt>Wildthings</tt> module you instead wanted to read the bears from a local JSON file.  
+</p>
+<p>
+  As a starting point, create a new directory named <tt>db</tt> and copy/paste the following JSON into a file named <tt>bears.json</tt> inside the <tt>db</tt> directory:
+</p>
+<div class="highlight"><pre><span class="p">{</span>
+  <span class="s2">"bears"</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Teddy"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Brown"</span><span class="p">,</span>
+      <span class="s2">"hibernating"</span><span class="p">:</span> <span class="no">true</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Smokey"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Black"</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Paddington"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Brown"</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Scarface"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Grizzly"</span><span class="p">,</span>
+      <span class="s2">"hibernating"</span><span class="p">:</span> <span class="no">true</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Snow"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Polar"</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Brutus"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Grizzly"</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Rosie"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Black"</span><span class="p">,</span>
+      <span class="s2">"hibernating"</span><span class="p">:</span> <span class="no">true</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Roscoe"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Panda"</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Iceman"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Polar"</span><span class="p">,</span>
+      <span class="s2">"hibernating"</span><span class="p">:</span> <span class="no">true</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="s2">"id"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+      <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Kenai"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Grizzly"</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+  Then change the <tt>Wildthings.list_bears</tt> function so that it reads the JSON file and decodes it into a list of <tt>Bear</tt> structs. You can then remove the hard-coded list of bears. 
+</p>
+<p>
+  The <tt>Poison.Parser.parse!</tt> function you used in the previous exercise won't work because it returns an Elixir map and you want a list of <tt>Bear</tt> structs. That's where the <tt>Poison.decode!</tt> function comes in. The syntax is a little funky, so here's the incantation you want:
+</p>
+<div class="highlight"><pre><span class="nc">Poison</span><span class="p">.</span><span class="n">decode!</span><span class="p">(</span><span class="n">json</span><span class="p">,</span> <span class="ss">as</span><span class="p">:</span> <span class="p">%{</span><span class="s2">"bears"</span> <span class="p">=&gt;</span> <span class="p">[%</span><span class="nc">Bear</span><span class="p">{}]})</span>
+</pre></div>
+<p>
+  It decodes the JSON string into a map with a key named <tt>bears</tt> and a value that's a list of <tt>Bear</tt> structs. 
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">list_bears</span> <span class="k">do</span>
+  <span class="nc">Path</span><span class="p">.</span><span class="n">expand</span><span class="p">(</span><span class="s2">"../../db"</span><span class="p">,</span> <span class="bp">__DIR__</span><span class="p">)</span>
+  <span class="o">|&gt;</span> <span class="nc">Path</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"bears.json"</span><span class="p">)</span>
+  <span class="o">|&gt;</span> <span class="n">read_json</span>
+  <span class="o">|&gt;</span> <span class="nc">Poison</span><span class="p">.</span><span class="n">decode!</span><span class="p">(</span><span class="ss">as</span><span class="p">:</span> <span class="p">%{</span><span class="s2">"bears"</span> <span class="p">=&gt;</span> <span class="p">[%</span><span class="nc">Bear</span><span class="p">{}]})</span>
+  <span class="o">|&gt;</span> <span class="nc">Map</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bears"</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="kd">defp</span> <span class="n">read_json</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="k">do</span>
+  <span class="k">case</span> <span class="nc">File</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">contents</span><span class="p">}</span> <span class="p">-&gt;</span>
+      <span class="n">contents</span>
+    <span class="p">{</span><span class="ss">:error</span><span class="p">,</span> <span class="n">reason</span><span class="p">}</span> <span class="p">-&gt;</span> 
+      <span class="nc">IO</span><span class="p">.</span><span class="n">inspect</span> <span class="s2">"Error reading </span><span class="si">#{</span><span class="n">source</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span>
+      <span class="s2">"[]"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Serve Markdown Pages</h3>
+<p>
+  If you want more practice using external libraries, suppose you wanted to support static pages written in Markdown. For example, when you get a request for <tt>/pages/faq</tt> you want to read the file named <tt>faq.md</tt> in the <tt>pages</tt> directory and convert it from Markdown to HTML. Here's an example Markdown file you can copy/paste:
+</p>
+<pre># Frequently Asked Questions
+
+- **Have you really seen Bigfoot?**
+
+  Yes! In this [totally believable video](https://www.youtube.com/watch?v=v77ijOO8oAk)!
+
+- **No, I mean seen Bigfoot *on the refuge*?**
+
+  Oh! Not yet, but we're <em>still looking</em>...
+
+- **Can you just show me some code?**
+
+  Sure! Here's some Elixir:
+
+  ```elixir
+  ["Bigfoot", "Yeti", "Sasquatch"] |&gt; Enum.random()
+  ```</pre>
+<p>
+  Search for a Markdown library of your choosing on <a href="https://hex.pm/" target="_blank">https://hex.pm</a>, add it as a dependency, download it, and use it. Give it a try on your own first and then check the steps below if you need help:
+</p>
+<ul>
+  <li>
+    <p>
+      Add the dependency to the <tt>mix.exs</tt> file.    
+    </p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="c1"># We chose the Earmark library:</span>
+<span class="kd">defp</span> <span class="n">deps</span> <span class="k">do</span>
+  <span class="p">[{</span><span class="ss">:poison</span><span class="p">,</span> <span class="s2">"~&gt; 3.1"</span><span class="p">},</span> <span class="p">{</span><span class="ss">:earmark</span><span class="p">,</span> <span class="s2">"~&gt; 1.2"</span><span class="p">}]</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+  </li>
+  <li>
+    <p>
+      Download the dependency.
+    </p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">mix</span> <span class="n">deps</span><span class="p">.</span><span class="n">get</span>
+</pre></div>
+        </div>
+      </div>
+
+  </li>
+  <li>
+    <p>
+      Define a route that matches <tt>GET</tt> requests for names of pages. Read the corresponding Markdown file and convert it to HTML if the file was successfully read.
+    </p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">route</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"GET"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/pages/"</span> <span class="o">&lt;&gt;</span> <span class="n">name</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="na">@pages_path</span>
+  <span class="o">|&gt;</span> <span class="nc">Path</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"</span><span class="si">#{</span><span class="n">name</span><span class="si">}</span><span class="s2">.md"</span><span class="p">)</span>
+  <span class="o">|&gt;</span> <span class="nc">File</span><span class="p">.</span><span class="n">read</span>
+  <span class="o">|&gt;</span> <span class="n">handle_file</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span>
+  <span class="o">|&gt;</span> <span class="n">markdown_to_html</span>
+<span class="k">end</span>
+
+<span class="kd">def</span> <span class="n">markdown_to_html</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="nc">Earmark</span><span class="p">.</span><span class="n">as_html!</span><span class="p">(</span><span class="n">conv</span><span class="p">.</span><span class="n">resp_body</span><span class="p">)</span> <span class="p">}</span>
+<span class="k">end</span>
+
+<span class="kd">def</span> <span class="n">markdown_to_html</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">conv</span>
+</pre></div>
+        </div>
+      </div>
+
+  </li>
+</ul>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>external-library</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/720/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

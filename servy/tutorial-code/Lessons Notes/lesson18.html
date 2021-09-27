@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/37 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./18The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./18The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./18The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="nUsM2d40ITiPISjj3lBWSO+VB8FqM0oP362IhnP++N32QimLLlhn8kKrxMYk7n9FWKfqdWAaM8d2kXxG3MnNxQ==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./18The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Test Automation</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Running Tests</h3>
+<p>
+  As you saw in the video, you can run a specific test case like so
+</p>
+<pre>mix test test/servy_test.exs</pre>
+<p>
+  If you want to run multiple test cases, just give <tt>mix test</tt> a space-separated list of test case file names:
+</p>
+<pre>mix test test/parser_test.exs test/handler_test.exs</pre>
+<p>
+  And you can run all the test cases in one fell swoop like this
+</p>
+<pre>mix test</pre>
+<p>
+  Sometimes rather than running all the tests in a test case, it's handy to just
+  run a particular test that's failing. To do that, you can include the line
+  number of the test to run, like so:
+</p>
+<pre>mix test test/parser_test.exs:7</pre>
+<p>
+  But how do you know the line number? You could get it from your code editor, but there's an easier way! When a test fails, the second line of the output includes the file name and line number where the failing test was defined. For example, the following test failed on line 7:
+</p>
+<pre>1) test parses a list of header fields into a map (ParserTest)
+     test/parser_test.exs:7
+     Assertion with == failed
+     code:  headers == %{"B" =&gt; "2"}
+     left:  %{"B" =&gt; "2", "A" =&gt; "1"}
+     right: %{"B" =&gt; "2"}
+     stacktrace:
+       test/parser_test.exs:12: (test)</pre>
+<p>
+  The <em>easiest</em> way to run a failing test is to copy the second line of the output above (the file name and line number) and paste it after <tt>mix test</tt>, so you end up with:
+</p>
+<pre>mix test test/parser_test.exs:7</pre>
+<p>
+  The <tt>mix test</tt> task has a bunch of other options you may want to check out in the <a href="https://hexdocs.pm/mix/Mix.Tasks.Test.html" target="_blank">documentation</a> or by running:
+</p>
+<pre>mix help test</pre>
+
+<h3>Exercise: Check Out Assertion Macros</h3>
+<p>
+We personally like a unit testing framework that doesn't try to get too fancy. And ExUnit feels like it's not too much, and not too little... but <em>just right!</em>
+</p>
+<p>
+The vast majority of the time you'll use two assertion macros: <tt>assert</tt> and <tt>refute</tt>. Because generally speaking, you expect something to either be truthy or falsey.  ExUnit does provides a few other special-case assertion macros and it's worth spending a minute looking through the <a href="https://hexdocs.pm/ex_unit/ExUnit.Assertions.html" target="_blank">other assertions</a> just so you know what's possible.
+</p>
+
+<h3>Exercise: Test DELETE</h3>
+<p>
+  In <tt>HandlerTest</tt>, add a test for the <tt>DELETE</tt> request you implemented in an earlier exercise.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">test</span> <span class="s2">"DELETE /bears"</span> <span class="k">do</span>
+  <span class="n">request</span> <span class="p">=</span> <span class="sh">"""</span>
+<span class="sh">  DELETE /bears/1 HTTP/1.1</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Host: example.com</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  User-Agent: ExampleBrowser/1.0</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Accept: */*</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  """</span>
+
+  <span class="n">response</span> <span class="p">=</span> <span class="n">handle</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+  <span class="n">assert</span> <span class="n">response</span> <span class="o">==</span> <span class="sh">"""</span>
+<span class="sh">  HTTP/1.1 403 Forbidden</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Content-Type: text/html</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Content-Length: 29</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">  Deleting a bear is forbidden!</span>
+<span class="sh">  """</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Trick: Speeding Up Tests</h3>
+<p>
+  By default, ExUnit executes each test case (test file/module) serially. Thus, as the number of test cases increases, so does the time it takes to execute those tests. You can speed up the execution of multiple test cases by running them concurrently rather than serially. To allow a test case to run concurrently, simply set the <tt>async</tt> option to <tt>true</tt>
+  on this existing line:
+</p>
+<div class="highlight"><pre><span class="kn">use</span> <span class="nc">ExUnit.Case</span><span class="p">,</span> <span class="ss">async</span><span class="p">:</span> <span class="no">true</span>
+</pre></div>
+<p>
+  It's important to note that individual tests within the test case are <em>always</em> run serially. Setting <tt>async</tt> to <tt>true</tt> allows the test case as a whole to run in parallel with other test cases.
+</p>
+<p>
+  With only a couple test cases as we have now, you likely won't notice a difference. This is just a trick to keep in your back pocket when/if test execution speed becomes an issue. Also, beware that you won't be able to use this trick if a test case accesses shared state or resources with another test cases. If both those test cases run concurrently, then they'll end up stepping on each other.
+</p>
+
+<h3>Tip: Organizing Doctests</h3>
+<p>
+  In the video we added the <tt>doctest</tt> macro to the <tt>ParserTest</tt> test case like so:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">ParserTest</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">ExUnit.Case</span>
+<span class="hll">  <span class="n">doctest</span> <span class="nc">Servy.Parser</span>
+</span>
+  <span class="p">...</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  That line tells ExUnit to look for doctests in the <tt>Servy.Parser</tt> module and generate ExUnit tests for any doctests it finds. Any generated ExUnit tests will be included in the existing <tt>ParserTest</tt> test case.
+</p>
+<p>
+  Another option is to define a new test case who's entire job is to aggregate all the doctests. For example, you could create a <tt>DocTest</tt> module that simply has one or more <tt>doctest</tt> lines:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">DocTest</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">ExUnit.Case</span>
+  <span class="n">doctest</span> <span class="nc">Servy.Parser</span>
+  <span class="n">doctest</span> <span class="nc">Servy.Handler</span>
+  <span class="n">doctest</span> <span class="nc">Servy.Plugins</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Now any generated ExUnit tests for those doctests will be included in the <tt>DocTest</tt> test case. So to run all the doctests you would use
+</p>
+<pre>mix test test/doc_test.exs</pre>
+<p>
+  It's just a different way to organize, and run, doctests.
+</p>
+
+<h3>HTTP Message Spec</h3>
+<p>
+  In the video we added CRLF characters to the end of the request lines in the tests and to the end of the response lines returned by <tt>Handler.format_response</tt>. We did this because later on we'll send requests from a browser, and browsers follow the HTTP specification (RFC 2616). So we want our tests to accurately reflect requests that a browser will send, and we want to format responses in a way the browser expects. 
+</p>
+<p>
+  If you're curious, the <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html" target="_blank">HTTP Message</a> section of RFC 2616 specifies where CRLF characters are required in both requests and responses.
+</p>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>testing</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/718/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

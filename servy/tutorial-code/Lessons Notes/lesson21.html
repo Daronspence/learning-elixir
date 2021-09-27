@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/44 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./21The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./21The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./21The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="JtOisF8NnrNv7si1uUbxs0Wr/w6/6S9REZpIZ+5j7mdN2ofir2HYeaJkJJBD+Ni+8pkSurXAVpm4prynQVTbfw==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./21The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Concurrent, Isolated Processes</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Concurrency vs. Parallelism: A Tasty Analogy</h3>
+<p>
+  Here's another way to think about concurrency and parallelism: 
+  <a href="http://nathanmlong.com/2017/06/concurrency-vs-paralellism/" target="_blank">a Burrito Shop</a>. Give it a read to reinforce what you've already learned. Bonus meta points for concurrently munching on a burrito. 🌯
+</p>
+
+<h3>Two Ways to Spawn</h3>
+<p>
+  To recap, the <tt>spawn/1</tt> function takes a zero-arity anonymous function. For example:
+</p>
+<div class="highlight"><pre><span class="n">spawn</span><span class="p">(</span><span class="k">fn</span><span class="p">()</span> <span class="p">-&gt;</span> <span class="n">serve</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+</pre></div>
+<p>
+  There's also a <tt>spawn/3</tt> function that takes the module name, the function name (as an atom), and the list of arguments passed to the function.
+  For example:
+</p>
+<div class="highlight"><pre><span class="n">spawn</span><span class="p">(</span><span class="nc">Servy.HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+</pre></div>
+<p>
+  You may hear these three arguments referred to as MFA (for module, function, arguments).
+</p>
+<p>
+  In either case, <tt>spawn</tt> creates a process and immediately returns the PID of that process. The process that called <tt>spawn</tt> does not block; it continues execution. Meanwhile, the spawned process runs its function concurrently, in the background. When that function returns, the spawned process exits normally and the Erlang VM takes care of cleaning up its memory.
+</p>
+
+<h3>Functions Are Closures</h3>
+<p>
+  In the video we spawned the <tt>serve</tt> function and passed it the
+  <tt>client_socket</tt>, which <tt>serve</tt> uses to read the request and send back the response:
+</p>
+<div class="highlight"><pre><span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">client_socket</span><span class="p">}</span> <span class="p">=</span> <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">accept</span><span class="p">(</span><span class="n">listen_socket</span><span class="p">)</span>
+
+<span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="n">serve</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+</pre></div>
+<p>
+  Notice that the <tt>client_socket</tt> variable is bound in the outer scope. Then the spawned anonymous function uses this same variable. This works because functions in Elixir act as <em>closures</em>. When a function is defined, it "closes around" the bindings of variables in the scope in which the function was defined. 
+</p>
+<p>
+  For example, when our anonymous function is defined, it remembers the binding of <tt>client_socket</tt>. In this way, the contents of <tt>client_socket</tt> are passed from the process that called <tt>spawn</tt> to the spawned process itself. It's important to note that data passed from one process to another is <em>always</em> deep copied since processes share no memory.
+</p>
+
+<h3>Inspecting the PID</h3>
+<p>
+  In the video we used the <tt>inspect</tt> function to print the PID of the current process, like so:
+</p>
+<div class="highlight"><pre><span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="n">inspect</span> <span class="n">self</span><span class="p">()</span><span class="si">}</span><span class="s2">: Working on it!</span><span class="se">\n</span><span class="s2">"</span>
+</pre></div>
+<p>
+  You might expect this to work:
+</p>
+<div class="highlight"><pre><span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="n">self</span><span class="p">()</span><span class="si">}</span><span class="s2">: Working on it!</span><span class="se">\n</span><span class="s2">"</span>
+</pre></div>
+<p>
+  However, the PID returned by <tt>self</tt> isn't a string; it's a data structure. And we can't interpolate that data structure into the string that gets printed to the screen. Instead, we have to first convert the PID data structure's internal representation into a string, which is exactly what the <a href="https://hexdocs.pm/elixir/Kernel.html#inspect/2" target="_blank">inspect</a> function does.
+</p>
+
+<h3>Getting System Info</h3>
+<p>
+  In the video we counted the number of processes by using the Elixir 
+  <tt>Process</tt> module, like so:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">list</span> <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">count</span>
+</pre></div>
+<p>
+  The <tt>Process.list</tt> function returns a list of the PIDS of all currently-running processes, which we then counted.
+</p>
+<p>
+  Here's another way to do the same thing using the <tt>Erlang</tt> module's <tt>system_info</tt> function:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:erlang</span><span class="p">.</span><span class="n">system_info</span><span class="p">(</span><span class="ss">:process_count</span><span class="p">)</span>
+</pre></div>
+<p>
+  In fact, the <a href="http://erlang.org/doc/man/erlang.html#system_info-1" target="_blank">system_info</a> function will return all sorts of system-level information depending on the argument you pass it. For example, 
+  passing it <tt>:process_limit</tt> returns the maximum number of processes that can be simultaneously alive, by default:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:erlang</span><span class="p">.</span><span class="n">system_info</span><span class="p">(</span><span class="ss">:process_limit</span><span class="p">)</span>
+<span class="mi">262144</span>
+</pre></div>
+<p>
+  And that's just the tip of the iceberg. The amount of information available to you in real time, while the Erlang VM is running, is truly impressive!
+</p>
+
+<h3>Backlog Queue</h3>
+<p>
+  In the video we said that if a client tries to connect to the server while it's busy handling a request, then the connection request gets put in a backlog queue. And when that queue fills up with pending connections, new client connections are rejected.
+</p>
+<p>
+  By default, the backlog queue can hold 5 pending connections. However, you can change the queue size by passing an option to the <tt>listen</tt> function. For example, here's how to set the maximum size of the backlog queue to 10, along with our other options:
+</p>
+<div class="highlight"><pre><span class="n">options</span> <span class="p">=</span> <span class="p">[</span><span class="ss">:binary</span><span class="p">,</span> <span class="ss">backlog</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="ss">packet</span><span class="p">:</span> <span class="ss">:raw</span><span class="p">,</span> <span class="ss">active</span><span class="p">:</span> <span class="no">false</span><span class="p">,</span> <span class="ss">reuseaddr</span><span class="p">:</span> <span class="no">true</span><span class="p">]</span>
+
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">listen_socket</span><span class="p">}</span> <span class="p">=</span> <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">listen</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+</pre></div>
+<p>
+  We put all the options on a separate line just to make it easier to read.
+</p>
+
+<h3>Exercise: Write a Simple Timer</h3>
+<p>
+  Write a <tt>Timer</tt> module that has a <tt>remind</tt> function taking two arguments: a string representing something you want to be reminded about and the number of seconds in the future when you want to be reminded about that thing. Here's an example of how to use it:
+</p>
+<div class="highlight"><pre><span class="nc">Timer</span><span class="p">.</span><span class="n">remind</span><span class="p">(</span><span class="s2">"Stand Up"</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="nc">Timer</span><span class="p">.</span><span class="n">remind</span><span class="p">(</span><span class="s2">"Sit Down"</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="nc">Timer</span><span class="p">.</span><span class="n">remind</span><span class="p">(</span><span class="s2">"Fight, Fight, Fight"</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+</pre></div>
+<p>
+  When the timer expires, simply print the reminder.
+</p>
+<p>
+  There's one gotcha: If you put the <tt>Timer</tt> module and the example code above in a file (for example <tt>timer.ex</tt>), and then you run that file, you won't get any reminders! That's because the <tt>elixir</tt> executable exits the Erlang VM after all the code in the file has been executed. So all the reminder processes are killed before their timer has expired.
+</p>
+<p>
+  There are two ways to fix this. One is to sleep indefinitely at the end of the file so that the Erlang VM doesn't exit:
+</p>
+<div class="highlight"><pre><span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="ss">:infinity</span><span class="p">)</span>
+</pre></div>
+<p>
+  Another solution is to tell the <tt>elixir</tt> executable to not exit the Erlang VM which you can do using the <tt>--no-halt</tt> option, like so:
+</p>
+<pre>elixir --no-halt timer.ex</pre>
+<p>
+  Because you told the VM to never halt, after getting all the reminders you'll need to press CTRL-C twice to kill the VM.
+</p>
+
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Timer</span> <span class="k">do</span>
+  <span class="kd">def</span> <span class="n">remind</span><span class="p">(</span><span class="n">reminder</span><span class="p">,</span> <span class="n">seconds</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> 
+      <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">seconds</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+      <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="n">reminder</span> 
+    <span class="k">end</span><span class="p">)</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Super-Mega Spawn</h3>
+<p>
+  Just how lightweight and fast is it to spawn a single process? We're talking an initial memory footprint of 1-2 KB and a few microseconds to spawn. You can spawn thousands of processes on a single machine without the Erlang VM breaking a sweat. Go ahead and give this a try in an <tt>iex</tt> session:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="mi">1</span><span class="p">..</span><span class="mi">10_000</span><span class="p">,</span> <span class="k">fn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="k">end</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+</pre></div>
+<p>
+  That spawned 10,000 processes with each process printing the square of the numbers 1 through 10,000. The point isn't to show how fast Elixir can do math. Rather, it's to show that Elixir (thanks to the Erlang VM) is highly optimized around the use of processes. When we hear the word "process", we programmers tend to think of something fairly expensive to create and manage. Part of learning the Elixir/Erlang way is to abandon that mindset and embrace processes!
+</p>
+
+<h3>Exercise: Get Comfortable with Observer</h3>
+<p>
+  The graphical Observer tool is a great way to see what's going on inside the Erlang VM and interact with processes. Once you've spent some time in the Observer you'll begin to see your application as being more like an operating system unto itself made up of cooperating processes. 
+</p>
+<p>
+  Spend a minute or two just poking around in the Observer GUI and read through the <a href="http://erlang.org/doc/apps/observer/observer_ug.html" target="_blank">Observer User's Guide</a> for explanations of the information displayed in each tab.
+</p>
+
+<h3>Exercise: Write an HttpServer Test</h3>
+<p>
+  Write a test for the <tt>HttpServer</tt> module. You'll need to start the server in its own process, connect to it and send a request through a socket, and then verify the response. 
+</p>
+<p>
+  You can use the <tt>HttpClient</tt> module you wrote in the previous section's exercise to connect to the server and send it a request through a socket. You can find valid request/response pairs in your existing <tt>HandlerTest</tt> module.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">HttpServerTest</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">ExUnit.Case</span>
+
+  <span class="kn">alias</span> <span class="nc">Servy.HttpServer</span>
+  <span class="kn">alias</span> <span class="nc">Servy.HttpClient</span>
+
+  <span class="n">test</span> <span class="s2">"accepts a request on a socket and sends back a response"</span> <span class="k">do</span>
+    <span class="n">spawn</span><span class="p">(</span><span class="nc">HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+
+    <span class="n">request</span> <span class="p">=</span> <span class="sh">"""</span>
+<span class="sh">    GET /wildthings HTTP/1.1</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    Host: example.com</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    User-Agent: ExampleBrowser/1.0</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    Accept: */*</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    """</span>
+
+    <span class="n">response</span> <span class="p">=</span> <span class="nc">HttpClient</span><span class="p">.</span><span class="n">send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+    <span class="n">assert</span> <span class="n">response</span> <span class="o">==</span> <span class="sh">"""</span>
+<span class="sh">    HTTP/1.1 200 OK</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    Content-Type: text/html</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    Content-Length: 20</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    </span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">    Bears, Lions, Tigers</span>
+<span class="sh">    """</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Transfer Socket Ownership</h3>
+<p>
+  In the video we sent a <tt>/kaboom</tt> request to demonstrate what happens when a process dies unexpectedly. The exception gets raised when the <tt>Servy.Handler.handle</tt> function is called, right here:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">serve</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">client_socket</span>
+  <span class="o">|&gt;</span> <span class="n">read_request</span>
+<span class="hll">  <span class="o">|&gt;</span> <span class="nc">Servy.Handler</span><span class="p">.</span><span class="n">handle</span>  <span class="c1"># KABOOM!</span>
+</span>  <span class="o">|&gt;</span> <span class="n">write_response</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Since an exception is raised, the <tt>write_response</tt> function doesn't get called which is problematic because it's responsible for closing the client socket:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">write_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">client_socket</span><span class="p">)</span> <span class="k">do</span>
+  <span class="ss">:ok</span> <span class="p">=</span> <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">send</span><span class="p">(</span><span class="n">client_socket</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+
+  <span class="c1"># left out print statements here</span>
+
+<span class="hll">  <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">close</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span>
+</span><span class="k">end</span>
+</pre></div>
+<p>
+  Now, this isn't a big deal for our web server. We don't intended to use it in a production environment where it would run for a long time and potentially leave a bunch of open sockets lying around. But if you were building a <em>real</em> web server then you'd need to be more mindful of how you manage limited socket resources. That being said, we don't recommend you build a <em>real</em> web server from scratch as a <a href="https://github.com/ninenines/cowboy" target="_blank">battle-tested web server</a> already exists, among others.
+</p>
+<p>
+  In any event, it's worth noting that <tt>gen_tcp</tt> has a handy, built-in solution to closing the socket. When a socket is created, it remembers the process that created it. That process is referred to as the <em>controlling process</em>. And if that controlling process dies, it takes care of closing the socket it created.
+</p>
+<p>
+  OK, so who's the controlling process of our <tt>client_socket</tt>? Well, that socket gets created in our <tt>accept_loop</tt> function when a client connection is accepted:
+</p>
+<div class="highlight"><pre><span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">client_socket</span><span class="p">}</span> <span class="p">=</span> <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">accept</span><span class="p">(</span><span class="n">listen_socket</span><span class="p">)</span>
+</pre></div>
+<p>
+  As you know, all Elixir code runs in a process. So the process that calls <tt>accept</tt> is the controlling process.
+</p>
+<p>
+  However, we then hand the <tt>client_socket</tt> off to the <tt>serve</tt> function which runs in a new, spawned process:
+</p>
+<div class="highlight"><pre><span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="n">serve</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+</pre></div>
+<p>
+  Here's the problem: If that spawned process dies, it doesn't automatically close the <tt>client_socket</tt>. Why? You guessed it: Because the spawned process is not the controlling process. Not to worry. We can make it the controlling process like so:  
+</p>
+<div class="highlight"><pre><span class="n">pid</span> <span class="p">=</span> <span class="n">spawn</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="n">serve</span><span class="p">(</span><span class="n">client_socket</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="hll"><span class="ss">:ok</span> <span class="p">=</span> <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">controlling_process</span><span class="p">(</span><span class="n">client_socket</span><span class="p">,</span> <span class="n">pid</span><span class="p">)</span>
+</span></pre></div>
+<p>
+  Notice that first we had to bind the PID of the spawned process to the <tt>pid</tt> variable. Then we call <tt>:gen_tcp.controlling_process/2</tt> with two arguments: the socket and the PID of the new controlling process. Now if the spawned process dies, the <tt>client_socket</tt> will be automatically closed.
+</p>
+<p>
+  If you make that change in your code and then send a <tt>/kaboom</tt> request, instead of the request hanging (as it did in the video) you'll see that <tt>curl</tt> prints "Empty reply from server" and a browser will say something about the response being empty. That makes sense. The request process died, it closed the socket on the server, and the client detects that no response was sent back.
+</p>
+<p>
+  It's a nifty bit of housekeeping. We left it out of the video because we didn't want it to distract from learning about processes in general. It's also very specific to <tt>gen_tcp</tt>, so unless you end up doing a bunch of socket programming then it's not something you need to remember.
+</p>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>processes</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/726/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

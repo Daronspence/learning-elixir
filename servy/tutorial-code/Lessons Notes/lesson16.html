@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/33 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script id="twitter-wjs" src="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/widgets.js.завантаження"></script><script async="" src="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="U5+bmVfIDWsG4QD2V/YpnCyfvxPMvsb75Wa/q7V+RUA4lr7Lp6RLoctr7NOtSACRm61Sp8aXvzNMWktrGklwWA==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<script type="text/javascript" charset="utf-8" async="" src="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/button.556f0ea0e4da4e66cfdc182016dbd6db.js.завантаження"></script></head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Comprehensions</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>A Subtle Difference with EEx</h3>
+<p>
+  If you've used other templating languages, then you may have expected you could use <tt>&lt;%</tt> (without the equals sign) to run the list comprehension, like so:
+</p>
+<div class="highlight"><pre><span class="hll"><span class="o">&lt;</span><span class="p">%</span> <span class="k">for</span> <span class="n">bear</span> <span class="p">&lt;-</span> <span class="n">bears</span> <span class="k">do</span> <span class="p">%</span><span class="o">&gt;</span>
+</span>  <span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="p">%=</span> <span class="n">bear</span><span class="p">.</span><span class="n">name</span> <span class="p">%</span><span class="o">&gt;</span> <span class="o">-</span> <span class="o">&lt;</span><span class="p">%=</span> <span class="n">bear</span><span class="p">.</span><span class="n">type</span> <span class="p">%</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="p">%</span> <span class="k">end</span> <span class="p">%</span><span class="o">&gt;</span>
+</pre></div>
+<p>
+  However, in EEx all expressions that output something to the template must use the equals sign (=). In this case, it's the comprehension that returns the final string that we want to inject into the template, thus the need to use <tt>&lt;%=</tt> rather than <tt>&lt;%</tt> in order to have the result 
+  output to the template:
+</p>
+<div class="highlight"><pre><span class="hll"><span class="o">&lt;</span><span class="p">%=</span> <span class="k">for</span> <span class="n">bear</span> <span class="p">&lt;-</span> <span class="n">bears</span> <span class="k">do</span> <span class="p">%</span><span class="o">&gt;</span>
+</span>  <span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="p">%=</span> <span class="n">bear</span><span class="p">.</span><span class="n">name</span> <span class="p">%</span><span class="o">&gt;</span> <span class="o">-</span> <span class="o">&lt;</span><span class="p">%=</span> <span class="n">bear</span><span class="p">.</span><span class="n">type</span> <span class="p">%</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="p">%</span> <span class="k">end</span> <span class="p">%</span><span class="o">&gt;</span>
+</pre></div>
+
+<h3>Inspecting in EEx Templates</h3>
+<p>
+  In the videos we used the <tt>inspect</tt> function to get a representation of the <tt>bears</tt> list and then output it to the template, like so:
+</p>
+<div class="highlight"><pre><span class="o">&lt;</span><span class="p">%=</span> <span class="n">inspect</span><span class="p">(</span><span class="n">bears</span><span class="p">)</span> <span class="p">%</span><span class="o">&gt;</span>
+</pre></div>
+<p>
+  This <a href="https://hexdocs.pm/elixir/Kernel.html#inspect/2" target="_blank">inspect</a> function is defined in the <tt>Kernel</tt> module and it's automatically imported. 
+</p>
+<p>
+  Here's a gotcha: Calling the <tt>inspect</tt> function is fundamentally different from calling the <tt>IO.inspect</tt> function. Calling <tt>inspect</tt> returns a string representing its argument whereas calling <tt>IO.inspect</tt> inspects its argument and <em>writes the result to a device</em> such as the console. So in a template file, you always want to use <tt>inspect</tt>.
+</p>
+
+<h3>Pattern Matching Comprehensions</h3>
+<p>
+  Imagine we have a list of tuples where the first element is a person's name and the second element indicates whether they prefer dogs or cats. 
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">prefs</span> <span class="p">=</span> <span class="p">[</span> <span class="p">{</span><span class="s2">"Betty"</span><span class="p">,</span> <span class="ss">:dog</span><span class="p">},</span> <span class="p">{</span><span class="s2">"Bob"</span><span class="p">,</span> <span class="ss">:dog</span><span class="p">},</span> <span class="p">{</span><span class="s2">"Becky"</span><span class="p">,</span> <span class="ss">:cat</span><span class="p">}</span> <span class="p">]</span>
+</pre></div>
+<p>
+  Now we'd like to get a list of all the dog lovers. To do that, we can use a pattern to destructure the tuples given to us by the generator, like so
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="k">for</span> <span class="p">{</span><span class="n">name</span><span class="p">,</span> <span class="ss">:dog</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">prefs</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="n">name</span>
+<span class="p">[</span><span class="s2">"Betty"</span><span class="p">,</span> <span class="s2">"Bob"</span><span class="p">]</span>
+</pre></div>
+<p>
+  Similarly, if we just want the cat lovers:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="k">for</span> <span class="p">{</span><span class="n">name</span><span class="p">,</span> <span class="ss">:cat</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">prefs</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="n">name</span>
+<span class="p">[</span><span class="s2">"Becky"</span><span class="p">]</span>
+</pre></div>
+<p>
+  Neat!
+</p>
+<p>
+  Turns out there's a more explicit way to do the filtering. Comprehensions have inherent support for a filter expression. For example, here's how to get the dog lovers using a filter expression:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="k">for</span> <span class="p">{</span><span class="n">name</span><span class="p">,</span> <span class="n">pet_choice</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">prefs</span><span class="p">,</span> <span class="n">pet_choice</span> <span class="o">==</span> <span class="ss">:dog</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="n">name</span>
+<span class="p">[</span><span class="s2">"Betty"</span><span class="p">,</span> <span class="s2">"Bob"</span><span class="p">]</span>
+</pre></div>
+<p>
+  Notice we've used pattern matching to extract the <tt>name</tt> and <tt>pet_choice</tt>, and then added the expression <tt>pet_choice == :dog</tt> to the right of the generator, separating it from the generator with a comma. If the expression is truthy then the element is selected for inclusion in the resulting list. If the filter expression returns <tt>false</tt> or <tt>nil</tt>, then the element is rejected.
+</p>
+<p>
+  For comparison, here's how to get the cat lovers:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="k">for</span> <span class="p">{</span><span class="n">name</span><span class="p">,</span> <span class="n">pet_choice</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">prefs</span><span class="p">,</span> <span class="n">pet_choice</span> <span class="o">==</span> <span class="ss">:cat</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="n">name</span>
+<span class="p">[</span><span class="s2">"Becky"</span><span class="p">]</span>
+</pre></div>
+<p>
+  Taking it a step further, the filter can be any predicate expression that returns truthy or falsey values. And because functions are expressions, we can use a function:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">dog_lover?</span> <span class="p">=</span> <span class="k">fn</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">choice</span> <span class="o">==</span> <span class="ss">:dog</span> <span class="k">end</span>
+
+<span class="o">&gt;</span> <span class="n">cat_lover?</span> <span class="p">=</span> <span class="k">fn</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">choice</span> <span class="o">==</span> <span class="ss">:cat</span> <span class="k">end</span>
+
+<span class="o">&gt;</span> <span class="k">for</span> <span class="p">{</span><span class="n">name</span><span class="p">,</span> <span class="n">pet_choice</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">prefs</span><span class="p">,</span> <span class="n">dog_lover?</span><span class="p">.(</span><span class="n">pet_choice</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">name</span>
+<span class="p">[</span><span class="s2">"Betty"</span><span class="p">,</span> <span class="s2">"Bob"</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="k">for</span> <span class="p">{</span><span class="n">name</span><span class="p">,</span> <span class="n">pet_choice</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">prefs</span><span class="p">,</span> <span class="n">cat_lover?</span><span class="p">.(</span><span class="n">pet_choice</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">name</span>
+<span class="p">[</span><span class="s2">"Becky"</span><span class="p">]</span>
+</pre></div>
+
+<h3>Tip: Atomize Keys</h3>
+<p>
+  Someday you'll be happily programming along with an Elixir map, something like this:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">style</span> <span class="p">=</span> <span class="p">%{</span><span class="s2">"width"</span> <span class="p">=&gt;</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"height"</span> <span class="p">=&gt;</span> <span class="mi">20</span><span class="p">,</span> <span class="s2">"border"</span> <span class="p">=&gt;</span> <span class="s2">"2px"</span><span class="p">}</span>
+</pre></div>
+<p>
+  And then you'll need to access the values, so you'll do something sorta like this, but more practical:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">area</span> <span class="p">=</span> <span class="n">style</span><span class="p">[</span><span class="s2">"width"</span><span class="p">]</span> <span class="o">*</span> <span class="n">style</span><span class="p">[</span><span class="s2">"height"</span><span class="p">]</span>
+</pre></div>
+<p>
+  And then you'll wonder: "Hey, how can I convert all the map keys from strings to atoms so I can access the values like this instead?"
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">area</span> <span class="p">=</span> <span class="n">style</span><span class="p">[</span><span class="ss">:width</span><span class="p">]</span> <span class="o">*</span> <span class="n">style</span><span class="p">[</span><span class="ss">:height</span><span class="p">]</span>  <span class="c1"># doesn't work!</span>
+</pre></div>
+<p>
+  And because you're a confident Elixir programmer, you'll check out the <tt>Map</tt> module documentation before resorting to a mindless StackOverflow search. And you'll likely discover that <tt>Map.new</tt> lets you create a new map by applying a transformation function to each element of an existing map:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="nc">Map</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="k">fn</span> <span class="p">{</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">}</span> <span class="p">-&gt;</span> <span class="p">{</span><span class="nc">String</span><span class="p">.</span><span class="n">to_atom</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">val</span><span class="p">}</span> <span class="k">end</span><span class="p">)</span>
+<span class="p">%{</span><span class="ss">border</span><span class="p">:</span> <span class="s2">"2px"</span><span class="p">,</span> <span class="ss">height</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="ss">width</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
+</pre></div>
+<p>
+  Good on you!
+</p>
+<p>
+  But maybe you're not satisfied with that, especially since you now know about comprehensions. There has to be a way to do the same thing with
+  a comprehension, right? So you give this a try:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="k">for</span> <span class="p">{</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">style</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="p">{</span><span class="nc">String</span><span class="p">.</span><span class="n">to_atom</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">val</span><span class="p">}</span>
+<span class="p">[</span><span class="ss">border</span><span class="p">:</span> <span class="s2">"2px"</span><span class="p">,</span> <span class="ss">height</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="ss">width</span><span class="p">:</span> <span class="mi">10</span><span class="p">]</span>
+</pre></div>
+<p>
+  So close! Unfortunately, you get back a list rather than a map.
+</p>
+<p>
+  Not to worry. There's a handy tip that's not as easy to find in the documentation, but you'll totally dig it once you get a little nudge. 
+</p>
+<p>
+By default, the values returned by the <tt>do</tt> block of a comprehension are packaged into a list. But you can use the <tt>:into</tt> option to package the returned values into any
+<tt>Collectable</tt>. And a map is a collectable, so we can do this:
+</p>
+
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="k">for</span> <span class="p">{</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">}</span> <span class="p">&lt;-</span> <span class="n">style</span><span class="p">,</span> <span class="ss">into</span><span class="p">:</span> <span class="p">%{},</span> <span class="ss">do</span><span class="p">:</span> <span class="p">{</span><span class="nc">String</span><span class="p">.</span><span class="n">to_atom</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">val</span><span class="p">}</span>
+<span class="p">%{</span><span class="ss">border</span><span class="p">:</span> <span class="s2">"2px"</span><span class="p">,</span> <span class="ss">height</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="ss">width</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
+</pre></div>
+
+<p>
+  Did we mention that comprehensions are powerful?
+</p>
+
+<h3>Tip: Precompiling Templates</h3>
+<p>
+  In the video we used the <tt>EEx.eval_file</tt> function to read a template file and evaluate the embedded Elixir using a set of bindings. It's simple and it gets the job done. But if your aim was to write a high-performance web server, then using <tt>eval_file</tt> isn't a good choice. It has to read the template file from disk, parse it, and evaluate it every time the matching route is called. And that's relatively slow...
+</p>
+<p>
+  It would be faster if we could do all the inefficient stuff once—in other words, precompile the template— and then run a function every time the route is called. Thankfully, the <a href="https://hexdocs.pm/eex/1.0.5/EEx.html" target="_blank">EEx</a> module offers an easy way to do that, too! The <a href="https://hexdocs.pm/eex/1.0.5/EEx.html#function_from_file/5" target="_blank">EEx.function_from_file/5</a> macro generates a function definition from the file contents. Take a minute to review the example in the documentation.
+</p>
+<p>
+  Here's how you could use it in the context of our web server. Suppose we had a <tt>BearView</tt> module that called <tt>EEx.function_from_file</tt> to
+  generate <tt>index</tt> and <tt>show</tt> functions for the <tt>index.eex</tt> and <tt>show.eex</tt> file contents respectively:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.BearView</span> <span class="k">do</span>
+  <span class="kn">require</span> <span class="nc">EEx</span>
+
+  <span class="na">@templates_path</span> <span class="nc">Path</span><span class="p">.</span><span class="n">expand</span><span class="p">(</span><span class="s2">"../../templates"</span><span class="p">,</span> <span class="bp">__DIR__</span><span class="p">)</span>
+
+  <span class="nc">EEx</span><span class="p">.</span><span class="n">function_from_file</span> <span class="ss">:def</span><span class="p">,</span> <span class="ss">:index</span><span class="p">,</span> <span class="nc">Path</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="na">@templates_path</span><span class="p">,</span> <span class="s2">"index.eex"</span><span class="p">),</span> <span class="p">[</span><span class="ss">:bears</span><span class="p">]</span>
+
+  <span class="nc">EEx</span><span class="p">.</span><span class="n">function_from_file</span> <span class="ss">:def</span><span class="p">,</span> <span class="ss">:show</span><span class="p">,</span> <span class="nc">Path</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="na">@templates_path</span><span class="p">,</span> <span class="s2">"show.eex"</span><span class="p">),</span> <span class="p">[</span><span class="ss">:bear</span><span class="p">]</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Notice the <tt>index</tt> function takes a <tt>bears</tt> argument and the 
+  <tt>show</tt> function takes a <tt>bear</tt> argument.
+</p>
+<p>
+  At <em>compile time</em>, the <tt>index</tt> and <tt>show</tt> functions are generated and their bodies return the pre-compiled template.
+</p>
+<p>
+  Then in our <tt>BearController</tt> we could call those functions to generate the response body:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">index</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">bears</span> <span class="p">=</span>
+    <span class="nc">Wildthings</span><span class="p">.</span><span class="n">list_bears</span><span class="p">()</span>
+    <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">sort</span><span class="p">(</span><span class="o">&amp;</span><span class="nc">Bear</span><span class="p">.</span><span class="n">order_asc_by_name</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="nc">BearView</span><span class="p">.</span><span class="n">index</span><span class="p">(</span><span class="n">bears</span><span class="p">)</span> <span class="p">}</span>
+<span class="k">end</span>
+
+<span class="kd">def</span> <span class="n">show</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="p">%{</span><span class="s2">"id"</span> <span class="p">=&gt;</span> <span class="n">id</span><span class="p">})</span> <span class="k">do</span>
+  <span class="n">bear</span> <span class="p">=</span> <span class="nc">Wildthings</span><span class="p">.</span><span class="n">get_bear</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="nc">BearView</span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="n">bear</span><span class="p">)</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  The <tt>index</tt> action calls the <tt>BearView.index/1</tt> function, passing the list of bears. And the <tt>show</tt> action calls the <tt>BearView.show/1</tt> function, passing the bear to show.
+</p>
+<p>
+  That's super fast!
+</p>
+
+<h3>Exercise: Deal A Hand Of Cards</h3>
+<p>
+  We saw in the video that comprehensions can have multiple generators
+  which effectively act like nested loops. Using multiple generators 
+  turns out to be a really succinct, powerful way to combine lists of elements (or any enumerable).
+</p>
+<p>
+  For example, suppose you have the following list of 13 card ranks and a list of 4 suits:
+</p>
+<div class="highlight"><pre><span class="n">ranks</span> <span class="p">=</span>
+  <span class="p">[</span> <span class="s2">"2"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">,</span> <span class="s2">"4"</span><span class="p">,</span> <span class="s2">"5"</span><span class="p">,</span> <span class="s2">"6"</span><span class="p">,</span> <span class="s2">"7"</span><span class="p">,</span> <span class="s2">"8"</span><span class="p">,</span> <span class="s2">"9"</span><span class="p">,</span> <span class="s2">"10"</span><span class="p">,</span> <span class="s2">"J"</span><span class="p">,</span> <span class="s2">"Q"</span><span class="p">,</span> <span class="s2">"K"</span><span class="p">,</span> <span class="s2">"A"</span> <span class="p">]</span>
+
+<span class="n">suits</span> <span class="p">=</span>
+  <span class="p">[</span> <span class="s2">"♣"</span><span class="p">,</span> <span class="s2">"♦"</span><span class="p">,</span> <span class="s2">"♥"</span><span class="p">,</span> <span class="s2">"♠"</span> <span class="p">]</span>
+</pre></div>
+<p>
+  A deck of playing cards consists of the 52 possible pairs : <tt>{"2", "♣"}, {"2", "♦"}, {"2", "♥"}, {"2", "♠"}, {"3", "♣"}, {"3", "♦"}, {"3", "♥"}, {"3", "♠"}</tt> and so on. In other words, it's the Cartesian product of the ranks and suits (13 * 4).
+</p>
+<p>
+  Use a comprehension to create a deck consisting of 52 tuples representing the possible playing cards, then print out the resulting list.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">deck</span> <span class="p">=</span> <span class="k">for</span> <span class="n">rank</span> <span class="p">&lt;-</span> <span class="n">ranks</span><span class="p">,</span> <span class="n">suit</span> <span class="p">&lt;-</span> <span class="n">suits</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="p">{</span><span class="n">rank</span><span class="p">,</span> <span class="n">suit</span><span class="p">}</span>
+
+<span class="nc">IO</span><span class="p">.</span><span class="n">inspect</span> <span class="n">deck</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then, to further sharpen your <tt>Enum</tt> skills, identify and use functions in the <tt>Enum</tt> module to deal 13 random cards from the deck.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">deck</span> 
+<span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">shuffle</span> 
+<span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span> 
+<span class="o">|&gt;</span> <span class="nc">IO</span><span class="p">.</span><span class="n">inspect</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Now, rather than dealing a single 13-card hand, use a different <tt>Enum</tt> function to randomly deal 4 hands of 13 cards each.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">deck</span> 
+<span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">shuffle</span> 
+<span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">chunk_every</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span> 
+<span class="o">|&gt;</span> <span class="nc">IO</span><span class="p">.</span><span class="n">inspect</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Reuse Render</h3>
+<p>
+  Currently the <tt>render/3</tt> function is defined in the <tt>BearController</tt> module. You can imagine wanting to render templates from other controllers as well. To allow for easier reuse, move the <tt>render/3</tt> function and the <tt>@templates_path</tt> definition into a new module named <tt>View</tt>, for example.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.View</span> <span class="k">do</span>
+  <span class="na">@templates_path</span> <span class="nc">Path</span><span class="p">.</span><span class="n">expand</span><span class="p">(</span><span class="s2">"../../templates"</span><span class="p">,</span> <span class="bp">__DIR__</span><span class="p">)</span>
+
+  <span class="kd">def</span> <span class="n">render</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">bindings</span> <span class="p">\\</span> <span class="p">[])</span> <span class="k">do</span>
+    <span class="n">content</span> <span class="p">=</span>
+      <span class="na">@templates_path</span>
+      <span class="o">|&gt;</span> <span class="nc">Path</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+      <span class="o">|&gt;</span> <span class="nc">EEx</span><span class="p">.</span><span class="n">eval_file</span><span class="p">(</span><span class="n">bindings</span><span class="p">)</span>
+
+    <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="n">content</span> <span class="p">}</span>
+  <span class="k">end</span>  
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then import the <tt>render/3</tt> function into the <tt>BearController</tt>.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kn">import</span> <span class="nc">Servy.View</span><span class="p">,</span> <span class="ss">only</span><span class="p">:</span> <span class="p">[</span><span class="ss">render</span><span class="p">:</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  In the same way, you can now import <tt>render/3</tt> into any controller.
+</p>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>comprehensions</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div style="text-align: center">
+<p>
+  <strong>Congratulations! You're halfway through the course!</strong>
+</p>
+<iframe id="twitter-widget-0" scrolling="no" frameborder="0" allowtransparency="true" class="twitter-share-button twitter-share-button-rendered twitter-tweet-button" title="Twitter Tweet Button" src="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/tweet_button.f47a2e0b4471326b6fa0f163bda46011.en.html" style="position: static; visibility: visible; width: 60px; height: 20px;" data-url="https://pragmaticstudio.com/elixir"></iframe>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+</div>
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/714/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<iframe scrolling="no" frameborder="0" allowtransparency="true" src="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/widget_iframe.f47a2e0b4471326b6fa0f163bda46011.html" style="display: none;"></iframe><script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script><iframe id="rufous-sandbox" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="true" style="position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: none;" title="Twitter analytics iframe" src="./16The Pragmatic Studio Online _ Developing with Elixir_OTP_files/saved_resource.html"></iframe></body></html>

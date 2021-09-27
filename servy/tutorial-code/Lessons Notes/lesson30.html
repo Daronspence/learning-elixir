@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/66 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./30The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./30The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./30The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="lk0ciYIOPXupjBJcNZ6Ou45GaF2i/Bc6D8+pVEDXxqP9RDnbcmJ7sWQG/nnPIKe2OXSF6ajVbvKm812U7+Dzuw==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./30The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Final OTP Application</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Changing the Port at Runtime</h3>
+<p>
+  In the video we ran the application with its default environment like so:
+</p>
+<pre>mix run --no-halt</pre>
+<p>
+  But what if you wanted to override the default port value so that the web server runs on port 5000, for example. Here's how to do that:
+</p>
+<pre>elixir --erl "-servy port 5000" -S mix run --no-halt</pre>
+<p>
+  The <tt>--erl</tt> option is the way you pass flags (switches) to the Erlang VM. Using <tt>-servy port 5000</tt> tells the VM to set the <tt>port</tt> environment parameter to the value <tt>5000</tt> for the <tt>servy</tt> application. Using this same form, you can set environment parameters for any application running in the VM.
+</p>
+<p>
+  It's also worth mentioning that you can also programmatically override any application environment parameter using the <tt>Application.put_env/3</tt> function. For example:
+</p>
+<div class="highlight"><pre><span class="nc">Application</span><span class="p">.</span><span class="n">put_env</span><span class="p">(</span><span class="ss">:servy</span><span class="p">,</span> <span class="ss">:port</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span>
+</pre></div>
+<p></p>
+
+<h3>Another Configuration Technique</h3>
+<p>
+  In the video, we added the default port to the application's environment in the <tt>mix.exs</tt> file:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">application</span> <span class="k">do</span>
+  <span class="p">[</span>
+    <span class="ss">extra_applications</span><span class="p">:</span> <span class="p">[</span><span class="ss">:logger</span><span class="p">],</span>
+    <span class="ss">mod</span><span class="p">:</span> <span class="p">{</span><span class="nc">Servy</span><span class="p">,</span> <span class="p">[]},</span>
+<span class="hll">    <span class="ss">env</span><span class="p">:</span> <span class="p">[</span><span class="ss">port</span><span class="p">:</span> <span class="mi">3000</span><span class="p">]</span>
+</span>  <span class="p">]</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Alternatively, you may have noticed that Mix generated a <tt>config/config.exs</tt> file. You could add the following line to that file:
+</p>
+<div class="highlight"><pre><span class="n">config</span> <span class="ss">:servy</span><span class="p">,</span> <span class="ss">port</span><span class="p">:</span> <span class="mi">3000</span>
+</pre></div>
+<p>
+  This works equally well if you always run the application from within the project. For example when you <tt>mix run</tt> it loads <tt>config.exs</tt> and the web server starts on port 3000 as expected:
+</p>
+<pre>$ mix run --no-halt
+
+Starting the application...
+Starting THE supervisor...
+Starting the kickstarter...
+Starting the HTTP server...
+Starting the services supervisor...
+Starting the pledge server...
+Starting the sensor server with 60 min refresh...
+
+Listening for connection requests on port 3000...</pre>
+
+<p>
+  But there's a downside to this approach: If this application is run as a dependency of another application, then the contents of <tt>config.exs</tt> will have no effect because <tt>config.exs</tt> is never loaded. In other words, any configuration changes made to <tt>config.exs</tt> are restricted to this project. They aren't baked into the generated <tt>.app</tt> file.
+</p> 
+<p>
+  So it might help to think of <tt>config.exs</tt> as <em>project-specific</em> configuration whereas setting the default application environment in <tt>mix.exs</tt> as being <em>application-specific</em>.
+</p>
+
+<h3>Application Callback Module</h3>
+<p>
+  In the video we used the top-level <tt>Servy</tt> module (in <tt>lib/servy.ex</tt>) as the callback module for the <tt>Application</tt> behavior:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">Application</span>
+
+  <span class="kd">def</span> <span class="n">start</span><span class="p">(</span><span class="n">_type</span><span class="p">,</span> <span class="n">_args</span><span class="p">)</span> <span class="k">do</span>
+    <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the application..."</span>
+    <span class="nc">Servy.Supervisor</span><span class="p">.</span><span class="n">start_link</span><span class="p">()</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  As we mentioned, the callback module can be any module that uses the <tt>Application</tt> behavior. In fact, as you look around other Elixir projects you may see a file named <tt>application.ex</tt> that defines an <tt>Application</tt> callback module. For example, we could have created a <tt>lib/servy/application.ex</tt> file with the following:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.Application</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">Application</span>
+
+  <span class="kd">def</span> <span class="n">start</span><span class="p">(</span><span class="n">_type</span><span class="p">,</span> <span class="n">_args</span><span class="p">)</span> <span class="k">do</span>
+    <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the application..."</span>
+    <span class="nc">Servy.Supervisor</span><span class="p">.</span><span class="n">start_link</span><span class="p">()</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Then in <tt>mix.exs</tt> you would need to change the <tt>mod</tt> option to reference <tt>Servy.Application</tt> rather than <tt>Servy</tt>:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">application</span> <span class="k">do</span>
+  <span class="p">[</span>
+    <span class="ss">extra_applications</span><span class="p">:</span> <span class="p">[</span><span class="ss">:logger</span><span class="p">],</span>
+    <span class="ss">mod</span><span class="p">:</span> <span class="p">{</span><span class="nc">Servy.Application</span><span class="p">,</span> <span class="p">[]}</span>
+  <span class="p">]</span>
+<span class="k">end</span>
+</pre></div>
+
+<h3>Tip: Creating a Project with a Supervisor</h3>
+<p>
+  When you create a new project using <tt>mix new</tt> you can pass it the <tt>--sup</tt> option and Mix will generate an <tt>Application</tt> callback module that starts a supervisor.
+</p>
+<p>
+  For example, if you created a new <tt>slurpie</tt> project like so
+</p>
+<pre>mix new slurpie --sup</pre>
+<p>
+  It would then generate the following application callback module in the <tt>lib/slurpie/application.ex</tt> file:
+</p>
+
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Slurpie.Application</span> <span class="k">do</span>
+
+  <span class="kn">use</span> <span class="nc">Application</span>
+
+  <span class="kd">def</span> <span class="n">start</span><span class="p">(</span><span class="n">_type</span><span class="p">,</span> <span class="n">_args</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+      <span class="c1"># Starts a worker by calling: Slurpie.Worker.start_link(arg)</span>
+      <span class="c1"># {Slurpie.Worker, arg},</span>
+    <span class="p">]</span>
+
+    <span class="n">opts</span> <span class="p">=</span> <span class="p">[</span><span class="ss">strategy</span><span class="p">:</span> <span class="ss">:one_for_one</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="nc">Slurpie.Supervisor</span><span class="p">]</span>
+    <span class="nc">Supervisor</span><span class="p">.</span><span class="n">start_link</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="n">opts</span><span class="p">)</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Notice is creates a module-less supervisor as described earlier.
+</p>
+<p>
+  The <tt>--sup</tt> option also generates a <tt>mix.exs</tt> file that uses the generated callback module:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">application</span> <span class="k">do</span>
+  <span class="p">[</span>
+    <span class="ss">extra_applications</span><span class="p">:</span> <span class="p">[</span><span class="ss">:logger</span><span class="p">],</span>
+    <span class="ss">mod</span><span class="p">:</span> <span class="p">{</span><span class="nc">Slurpie.Application</span><span class="p">,</span> <span class="p">[]}</span>
+  <span class="p">]</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  It makes sense now that you understand how supervisors and applications work! So the next time you create an Elixir project, you might consider using this shortcut as a starting point.
+</p>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>application</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/749/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Step</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/64 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./29The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./29The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./29The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="wCd8j1KKfVthk8c57B5HBl4n/fUr731/zF8Mhc332fyrLlndouY7kawZKxwWoG4L6RUQQSHGBLdlY/hFYsDs5A==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./29The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Fault Recovery with OTP Supervisors</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Elixir 1.5 or Higher Required</h3>
+<p>
+  The supervisor code we showed in the video will only work with Elixir 1.5 or higher. So in the off chance you're still running Elixir 1.4, you'll need to <a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">install Elixir 1.5 or higher</a>. 
+</p>
+<p>
+  In terms of changes to your project files, the generated <tt>mix.exs</tt> file changed very slightly in Elixir 1.5. Here's the updated file which you can copy/paste into your <tt>mix.exs</tt> file:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.Mixfile</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">Mix.Project</span>
+
+  <span class="kd">def</span> <span class="n">project</span> <span class="k">do</span>
+    <span class="p">[</span>
+      <span class="ss">app</span><span class="p">:</span> <span class="ss">:servy</span><span class="p">,</span>
+      <span class="ss">version</span><span class="p">:</span> <span class="s2">"0.1.0"</span><span class="p">,</span>
+      <span class="ss">elixir</span><span class="p">:</span> <span class="s2">"~&gt; 1.5"</span><span class="p">,</span>
+      <span class="ss">start_permanent</span><span class="p">:</span> <span class="nc">Mix</span><span class="p">.</span><span class="n">env</span> <span class="o">==</span> <span class="ss">:prod</span><span class="p">,</span>
+      <span class="ss">deps</span><span class="p">:</span> <span class="n">deps</span><span class="p">()</span>
+    <span class="p">]</span>
+  <span class="k">end</span>
+
+  <span class="c1"># Run "mix help compile.app" to learn about applications.</span>
+  <span class="kd">def</span> <span class="n">application</span> <span class="k">do</span>
+    <span class="p">[</span>
+      <span class="ss">extra_applications</span><span class="p">:</span> <span class="p">[</span><span class="ss">:logger</span><span class="p">]</span>
+    <span class="p">]</span>
+  <span class="k">end</span>
+
+  <span class="c1"># Run "mix help deps" to learn about dependencies.</span>
+  <span class="kd">defp</span> <span class="n">deps</span> <span class="k">do</span>
+    <span class="p">[{</span><span class="ss">:poison</span><span class="p">,</span> <span class="s2">"~&gt; 3.1"</span><span class="p">}]</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+
+<h3>Defining Supervisors Prior to Elixir 1.5</h3>
+<p>
+  Elixir 1.5 (which we used in the video) streamlines how supervisors are defined as compared to Elixir 1.4. Using Elixir 1.4, we would have defined the <tt>ServicesSupervisor.init</tt> function like so:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">init</span><span class="p">(</span><span class="ss">:ok</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+    <span class="n">worker</span><span class="p">(</span><span class="nc">Servy.PledgeServer</span><span class="p">,</span> <span class="p">[[]]),</span>
+    <span class="n">worker</span><span class="p">(</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="p">[</span><span class="mi">60</span><span class="p">])</span>
+  <span class="p">]</span>
+
+  <span class="n">supervise</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="ss">strategy</span><span class="p">:</span> <span class="ss">:one_for_one</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  The <tt>worker</tt> and <tt>supervise</tt> functions are imported into any module that uses the <tt>Supervisor</tt> behavior. The <tt>worker</tt> function defines the specified module as a worker which will be started with the given list of arguments. Then the <tt>supervise</tt> function takes a list of children to supervise and a keyword list of options.
+</p>
+<p>
+  And here's how we would have defined the top-level <tt>Supervisor.init</tt> function using Elixir 1.4:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">init</span><span class="p">(</span><span class="ss">:ok</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+    <span class="n">worker</span><span class="p">(</span><span class="nc">Servy.KickStarter</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">]),</span>
+    <span class="n">supervisor</span><span class="p">(</span><span class="nc">Servy.ServicesSupervisor</span><span class="p">,</span> <span class="p">[[]])</span>
+  <span class="p">]</span>
+
+  <span class="n">supervise</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="ss">strategy</span><span class="p">:</span> <span class="ss">:one_for_one</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  The <tt>supervisor</tt> function is also imported into any module that uses the <tt>Supervisor</tt> behavior. The <tt>supervisor</tt> function specifies the given module as a supervisor which will be started with the given list of arguments. In this case, the list of children is comprised of a worker and a supervisor.
+</p>
+<p>
+  The <tt>worker</tt>, <tt>supervisor</tt>, and <tt>supervise</tt> functions are deprecated as of Elixir 1.5. 
+</p>
+
+<h3>Customization Options</h3>
+<p>
+  As we mentioned in the video, you have a lot of flexibility when it comes to overriding the default child specification for custom behavior. Let's walk through a few of the customization techniques...
+</p>
+
+<h4>Using Module Names</h4>
+<p>
+  OK, so this first technique doesn't customize anything. But it's good to know the baseline behavior before moving on to more advanced scenarios.
+</p>
+<p> 
+  The simplest way to list children is using their modules names, like so:
+</p>
+<div class="highlight"><pre><span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+  <span class="nc">Servy.SensorServer</span>
+<span class="p">]</span>
+</pre></div>
+<p>
+  The <tt>child_spec</tt> function will get invoked on each of the given modules, and an empty list will be passed as the argument. In other words, the invocation will be <tt>child_spec([])</tt>.
+</p>
+
+<p>
+  Here's the default implementation of the <tt>child_spec</tt> function that's injected when a module has the <tt>use GenServer</tt> line:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">child_spec</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span>
+    <span class="ss">id</span><span class="p">:</span> <span class="bp">__MODULE__</span><span class="p">,</span>
+    <span class="ss">start</span><span class="p">:</span> <span class="p">{</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:start_link</span><span class="p">,</span> <span class="p">[</span><span class="n">arg</span><span class="p">]},</span>
+    <span class="ss">restart</span><span class="p">:</span> <span class="ss">:permanent</span><span class="p">,</span>
+    <span class="ss">shutdown</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+    <span class="ss">type</span><span class="p">:</span> <span class="ss">:worker</span>
+  <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Notice that the argument (<tt>arg</tt>) is passed through as the argument to the <tt>start_link</tt> function. So when <tt>child_spec([])</tt> is invoked, the <tt>arg</tt> is replaced with <tt>[]</tt> and the function returns the following child specification:
+</p>
+<div class="highlight"><pre><span class="p">%{</span>
+  <span class="ss">id</span><span class="p">:</span> <span class="bp">__MODULE__</span><span class="p">,</span>
+<span class="hll">  <span class="ss">start</span><span class="p">:</span> <span class="p">{</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:start_link</span><span class="p">,</span> <span class="p">[[]]},</span>
+</span>  <span class="ss">restart</span><span class="p">:</span> <span class="ss">:permanent</span><span class="p">,</span>
+  <span class="ss">shutdown</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+  <span class="ss">type</span><span class="p">:</span> <span class="ss">:worker</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+  Since an empty list was passed as the argument to <tt>child_spec</tt>, that same empty list is substituted into the map that represents the child specification. The empty list will be passed to the <tt>start_link</tt> function. Therefore, the <tt>start_link</tt> function must be defined to accept an argument. For example, here's how we defined the <tt>PledgeServer.start_link</tt> function:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">start_link</span><span class="p">(</span><span class="n">_arg</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the pledge server..."</span>
+  <span class="nc">GenServer</span><span class="p">.</span><span class="n">start_link</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="p">%</span><span class="nc">State</span><span class="p">{},</span> <span class="ss">name</span><span class="p">:</span> <span class="na">@name</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  We didn't have a need for the argument (an empty list) so we ignored it.
+</p>
+
+<h4>Configuring a Child</h4>
+<p>
+  If you need to configure a child when it's started, you can pass it an argument <em>other than an empty list</em>. To do that, you specify a child using 
+  a <tt>{module, arg}</tt> tuple, like so:
+</p>
+<div class="highlight"><pre><span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+<span class="hll">  <span class="p">{</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="mi">60</span><span class="p">}</span>
+</span><span class="p">]</span>
+</pre></div>
+<p>
+  The first element of the tuple is the module containing the child implementation. The second element of the tuple, the <tt>arg</tt>, will be passed as the argument to the child's <tt>start_link</tt> function. 
+</p>
+<p>
+  In this case the argument is the number 60 which indicates the refresh interval. Here's how we defined the <tt>SensorServer.start_link</tt> function to accept the interval:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">start_link</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the sensor server with </span><span class="si">#{</span><span class="n">interval</span><span class="si">}</span><span class="s2"> min refresh..."</span>
+  <span class="nc">GenServer</span><span class="p">.</span><span class="n">start_link</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="p">%{},</span> <span class="ss">name</span><span class="p">:</span> <span class="na">@name</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  The argument can be whatever is necessary to configure the child. For example, you might choose to pass a list of keyword options:
+</p>
+<div class="highlight"><pre><span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+<span class="hll">  <span class="p">{</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="ss">interval</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span> <span class="ss">target</span><span class="p">:</span> <span class="s2">"bigfoot"</span><span class="p">}</span>
+</span><span class="p">]</span>
+</pre></div>
+<p>
+  Then in the <tt>SensorServer.start_link</tt> function you could extract the options from the keyword list like so:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">start_link</span><span class="p">(</span><span class="n">options</span><span class="p">)</span> <span class="k">do</span>
+<span class="hll">  <span class="n">interval</span> <span class="p">=</span> <span class="nc">Keyword</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="ss">:interval</span><span class="p">)</span>
+</span><span class="hll">  <span class="n">target</span> <span class="p">=</span> <span class="nc">Keyword</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="ss">:target</span><span class="p">)</span>
+</span>  <span class="p">...</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Finally, for more fine-grained control, you can also specify the child as a map containing at least the <tt>:id</tt> and <tt>:start</tt> fields of the child specification. For example:
+</p>
+<div class="highlight"><pre><span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+<span class="hll">  <span class="p">%{</span>
+</span><span class="hll">    <span class="ss">id</span><span class="p">:</span> <span class="nc">Servy.SensorServer</span><span class="p">,</span>
+</span><span class="hll">    <span class="ss">start</span><span class="p">:</span> <span class="p">{</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="ss">:start_link</span><span class="p">,</span> <span class="p">[</span><span class="mi">60</span><span class="p">]}</span>
+</span><span class="hll">  <span class="p">}</span>
+</span><span class="p">]</span>
+</pre></div>
+<p></p>
+
+<h4>Overriding Child Spec Fields</h4>
+<p>
+  If you need to override just a couple fields of the default child specification, you can list the overrides when using the <tt>GenServer</tt> behavior. For example, the following changes the <tt>:restart</tt> field from <tt>:permanent</tt> (the default) to <tt>:temporary</tt>:
+</p>
+<div class="highlight"><pre><span class="kn">use</span> <span class="nc">GenServer</span><span class="p">,</span> <span class="ss">restart</span><span class="p">:</span> <span class="ss">:temporary</span>
+</pre></div>
+<p>
+  Suppose you also wanted to override how the child is started. Here's how to do that:
+</p>
+<div class="highlight"><pre><span class="kn">use</span> <span class="nc">GenServer</span><span class="p">,</span> <span class="ss">start</span><span class="p">:</span> <span class="p">{</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:start_link</span><span class="p">,</span> <span class="p">[</span><span class="mi">60</span><span class="p">]},</span> <span class="ss">restart</span><span class="p">:</span> <span class="ss">:temporary</span>
+</pre></div>
+<p>
+  And for the <em>ultimate</em> flexibility, you can override the default <tt>child_spec</tt> function by defining your own in the child module. For example:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">child_spec</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span>
+    <span class="ss">id</span><span class="p">:</span> <span class="bp">__MODULE__</span><span class="p">,</span>
+    <span class="ss">start</span><span class="p">:</span> <span class="p">{</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:start_link</span><span class="p">,</span> <span class="p">[</span><span class="n">arg</span><span class="p">]},</span>
+    <span class="ss">restart</span><span class="p">:</span> <span class="ss">:permanent</span><span class="p">,</span>
+    <span class="ss">shutdown</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+    <span class="ss">type</span><span class="p">:</span> <span class="ss">:worker</span>
+  <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Notice that you can choose to use <tt>arg</tt> or ignore it altogether. It's your call.
+</p>
+
+<h4>Multiple Child Specs</h4>
+<p>
+  Being able to define your own <tt>child_spec</tt> function opens the door to making it a multi-clause function. You can use the argument passed to <tt>child_spec</tt> as a pattern to match one of several function clauses, with each clause returning a custom child specification. 
+</p>
+<p>
+  For example, suppose we have the following function clauses in the <tt>SensorServer</tt> module:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">child_spec</span><span class="p">(</span><span class="ss">:frequent</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span>
+    <span class="ss">id</span><span class="p">:</span> <span class="bp">__MODULE__</span><span class="p">,</span>
+    <span class="ss">start</span><span class="p">:</span> <span class="p">{</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:start_link</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">]},</span>
+    <span class="ss">restart</span><span class="p">:</span> <span class="ss">:permanent</span><span class="p">,</span>
+    <span class="ss">shutdown</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+    <span class="ss">type</span><span class="p">:</span> <span class="ss">:worker</span>
+  <span class="p">}</span>
+<span class="k">end</span>
+
+<span class="kd">def</span> <span class="n">child_spec</span><span class="p">(</span><span class="ss">:infrequent</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span>
+    <span class="ss">id</span><span class="p">:</span> <span class="bp">__MODULE__</span><span class="p">,</span>
+    <span class="ss">start</span><span class="p">:</span> <span class="p">{</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:start_link</span><span class="p">,</span> <span class="p">[</span><span class="mi">60</span><span class="p">]},</span>
+    <span class="ss">restart</span><span class="p">:</span> <span class="ss">:permanent</span><span class="p">,</span>
+    <span class="ss">shutdown</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+    <span class="ss">type</span><span class="p">:</span> <span class="ss">:worker</span>
+  <span class="p">}</span>
+<span class="k">end</span>
+
+<span class="kd">def</span> <span class="n">child_spec</span><span class="p">(</span><span class="bp">_</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span>
+    <span class="ss">id</span><span class="p">:</span> <span class="bp">__MODULE__</span><span class="p">,</span>
+    <span class="ss">start</span><span class="p">:</span> <span class="p">{</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:start_link</span><span class="p">,</span> <span class="p">[]},</span>
+    <span class="ss">restart</span><span class="p">:</span> <span class="ss">:permanent</span><span class="p">,</span>
+    <span class="ss">shutdown</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+    <span class="ss">type</span><span class="p">:</span> <span class="ss">:worker</span>
+  <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  The "frequent" clause indicates that the child should be started with a 1-minute refresh interval, whereas the "infrequent" clause stipulates a 60-minute refresh interval. And the catch-all clause doesn't indicate a refresh interval.
+</p>
+<p>
+  You can then set up the supervisor with a <tt>SensorServer</tt> that has a frequent refresh interval using:
+</p>
+<div class="highlight"><pre><span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+<span class="hll">  <span class="p">{</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="ss">:frequent</span><span class="p">}</span>
+</span><span class="p">]</span>
+</pre></div>
+<p>
+  Or perhaps you'd rather start it with an infrequent refresh interval:
+</p>
+<div class="highlight"><pre><span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+<span class="hll">  <span class="p">{</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="ss">:infrequent</span><span class="p">}</span>
+</span><span class="p">]</span>
+</pre></div>
+<p>
+  Notice that the argument, either <tt>:frequent</tt> or <tt>:infrequent</tt>, is matched to run the appropriate <tt>child_spec</tt> function clause.
+</p>
+
+<h3>Child Specification Fields</h3>
+<p>
+  Here's a quick break-down of the fields in the child specification and what they control:
+</p>
+<ul>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">:id</tt>
+    </p>
+    <p>
+      A name used internally by the supervisor to uniquely identify the child specification. This key is always required.
+    </p>
+    <p>
+      <strong>Default:</strong> <tt>__MODULE__</tt>
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">:start</tt>
+    </p>
+    <p>
+      A <tt>{module, function, args}</tt> tuple used to start a child process.
+      This key is always required.
+    </p>
+    <p>
+      <strong>Default:</strong> <tt>{__MODULE__, :start_link, [[]]}</tt>
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">:restart</tt>
+    </p>
+    <p>
+      An atom that defines when a terminated child process should be restarted by its supervisor:
+    </p>
+    <ul>
+      <li>
+        <p>
+          <tt>:permanent</tt> indicates that the child process is always restarted  
+        </p>
+      </li>
+      <li>
+        <p>
+          <tt>:temporary</tt> indicates that the child process is <em>never</em> restarted
+        </p>
+      </li>
+      <li>
+        <p>
+          <tt>:transient</tt> indicates that the child process is restarted only if it terminates <em>abnormally</em>. That is, the exit signal reason must be something other than <tt>:normal</tt>, <tt>:shutdown</tt>, or <tt>{:shutdown, term}</tt>.
+        </p>
+      </li>
+    </ul>
+    <p>
+      <strong>Default:</strong> <tt>:permanent</tt>
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">:shutdown</tt>
+    </p>
+    <p>
+      An atom that defines how a child process should be terminated by its supervisor:
+    </p>
+    <ul>
+      <li> 
+        <p>
+          <tt>:brutal_kill</tt> indicates that the child process is brutally terminated using <tt>Process.exit(child_pid, :kill)</tt>
+        </p>
+      </li>
+      <li>
+        <p>
+          <tt>:infinity</tt> indicates that the supervisor should wait indefinitely for the child process to terminate
+        </p>
+      </li>
+      <li>
+        <p>
+          any integer indicates the amount of time in milliseconds that the supervisor will wait for a child process to terminate gracefully after sending it a polite <tt>Process.exit(child, :shutdown)</tt> signal. If no exit signal is received from the child process within the specified time, the child process is brutally terminated using <tt>Process.exit(child_pid, :kill)</tt>. So the supervisor asks nicely once, then it drops the hammer.
+        </p>
+      </li>
+    </ul>
+    <p>
+      <strong>Default:</strong> <tt>5000</tt> if the type is <tt>:worker</tt> or <tt>:infinity</tt> if the type is <tt>:supervisor</tt>.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt style="background: #D5D6CF">:type</tt>
+    </p>
+    <p>
+      An atom that indicates if the child process is a <tt>:worker</tt> or a <tt>:supervisor</tt>.
+    </p>
+    <p>
+      <strong>Default:</strong> <tt>:worker</tt>
+    </p>
+  </li>
+</ul>
+
+<h3>Restart Strategies and Other Supervisor Options</h3>
+<p>
+  In the video, we initialized both supervisors with the <tt>:one_for_one</tt> restart strategy, like so
+</p>
+<div class="highlight"><pre><span class="nc">Supervisor</span><span class="p">.</span><span class="n">init</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="ss">strategy</span><span class="p">:</span> <span class="ss">:one_for_one</span><span class="p">)</span>
+</pre></div>
+<p>
+  Here's a quick summary of all the restart strategies:
+</p>
+<ul>
+  <li>
+    <p>
+      <tt>:one_for_one</tt> means if a child process terminates, only that process is restarted. None of the other child processes being supervised are affected.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt>:one_for_all</tt> means if any child process terminates, the supervisor will terminate all the other children. All the child processes are then restarted. You'll typically use this strategy if all the child processes depend on each other and should therefore have their fates tied together.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt>:rest_for_one</tt> means if a child process terminates, the rest of the child processes that were started after it (those children listed after the terminated child) are terminated as well. The terminated child process and the rest of the child processes are then restarted.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt>:simple_one_for_one</tt> is intended for situations where you need to dynamically attach children. This strategy is restricted to cases when the supervisor only has one child specification. Using this specification as a recipe, the supervisor can dynamically spawn multiple child processes that are then attached to the supervisor. You would use this strategy if you needed to create a pool of similar worker processes, for example.
+    </p>
+  </li>
+</ul>
+<p>
+  In addition to the <tt>strategy</tt> option, you can also initialize a supervisor with the following other options:
+</p>
+<ul>
+  <li>
+    <p>
+      <tt>:max_restarts</tt> indicates the maximum number of restarts allowed within a specific time frame. After this threshold is met, the supervisor gives up. This is used to prevent infinite restarts. The default is 3 restarts.
+    </p>
+  </li>
+  <li>
+    <p>
+      <tt>:max_seconds</tt> indicates the time frame in which <tt>:max_restarts</tt> applies. The default is 5 seconds.
+    </p>
+  </li>
+</ul>
+<p>
+  Here's an example of how you'd set all the supervisor options, overriding the defaults:
+</p>
+<div class="highlight"><pre><span class="n">opts</span> <span class="p">=</span> <span class="p">[</span><span class="ss">strategy</span><span class="p">:</span> <span class="ss">:one_for_one</span><span class="p">,</span> <span class="ss">max_restarts</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="ss">max_seconds</span><span class="p">:</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="nc">Supervisor</span><span class="p">.</span><span class="n">init</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="n">opts</span><span class="p">)</span>
+</pre></div>
+
+
+<h3>Module-less Supervisors</h3>
+<p>
+  In the video we defined both supervisors in their own modules that use the <tt>Supervisor</tt> behavior. It's worth noting that you can create "module-less" supervisors. For example if we didn't want to define a <tt>ServicesSupervisor</tt> module, here's how to create a similar supervisor "on the fly":
+</p>
+<div class="highlight"><pre><span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+  <span class="p">{</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="mi">60</span><span class="p">}</span>
+<span class="p">]</span>
+
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">pid</span><span class="p">}</span> <span class="p">=</span> <span class="nc">Supervisor</span><span class="p">.</span><span class="n">start_link</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="ss">strategy</span><span class="p">:</span> <span class="ss">:one_for_one</span><span class="p">)</span>
+</pre></div>
+<p>
+  Notice that rather than calling <tt>Supervisor.init</tt> with the children and options, you need to call <tt>Supervisor.start_link</tt> instead.
+</p>
+<p>
+  We tend to prefer using a module because it keeps all the supervisor code organized.
+</p>
+
+<h3>Exercise: Configure the SensorServer</h3>
+<p>
+  In a <a href="https://online.pragmaticstudio.com/courses/elixir/steps/courses/elixir/steps/59">previous exercise</a> you may have spiffed up the <tt>SensorServer</tt> to allow the refresh interval to be changed dynamically. If you completed that exercise, then you have a <tt>State</tt> struct that looks like this: 
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">State</span> <span class="k">do</span>
+  <span class="kd">defstruct</span> <span class="ss">sensor_data</span><span class="p">:</span> <span class="p">%{},</span> 
+            <span class="ss">refresh_interval</span><span class="p">:</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">minutes</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  And your <tt>SensorServer.start</tt> function currently uses 
+  <tt>%State{}</tt> as the initial state:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">start</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the sensor server..."</span>
+  <span class="nc">GenServer</span><span class="p">.</span><span class="n">start</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="p">%</span><span class="nc">State</span><span class="p">{},</span> <span class="ss">name</span><span class="p">:</span> <span class="na">@name</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  In the video we showed how to configure the <tt>SensorServer</tt> such that a refresh interval is set when the process starts. To do that, in the <tt>ServicesSupervisor</tt> we used a two-element tuple when describing the <tt>SensorServer</tt> child where the second element of the tuple is a number indicating the refresh interval:
+</p>
+<div class="highlight"><pre><span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+<span class="hll">  <span class="p">{</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="mi">60</span><span class="p">}</span>
+</span><span class="p">]</span>
+</pre></div>
+<p>
+  Then we changed the <tt>SensorServer.start_link</tt> function to take the refresh interval as the argument and we simply printed it out to the screen:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">start_link</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the sensor server with </span><span class="si">#{</span><span class="n">interval</span><span class="si">}</span><span class="s2"> min refresh..."</span>
+  <span class="nc">GenServer</span><span class="p">.</span><span class="n">start_link</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="p">%{},</span> <span class="ss">name</span><span class="p">:</span> <span class="na">@name</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  The point was to demonstrate how to configure a child process started by a supervisor. We didn't bother to do anything with the refresh interval beyond printing it because, well, there wasn't anything new to learn by actually making it work.
+</p>
+<p>
+  So now it's your turn: Use the refresh interval passed to the <tt>start_link</tt> function to actually change the interval used by the process!
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">start_link</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the sensor server with </span><span class="si">#{</span><span class="n">interval</span><span class="si">}</span><span class="s2"> min refresh..."</span>
+<span class="hll">  <span class="n">initial_state</span> <span class="p">=</span> <span class="p">%</span><span class="nc">State</span><span class="p">{</span><span class="ss">refresh_interval</span><span class="p">:</span> <span class="n">interval</span><span class="p">}</span>
+</span>  <span class="nc">GenServer</span><span class="p">.</span><span class="n">start_link</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="na">@name</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Supervise the FourOhFourCounter</h3>
+<p>
+  In a <a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">previous exercise</a> you converted a hand-rolled <tt>FourOhFourCounter</tt> server process to use the <tt>GenServer</tt> behavior. Now that it's a GenServer, it can be properly supervised!
+</p>
+<p>
+  For that to work, you'll need to change <tt>FourOhFourCounter</tt> slightly to follow the expected conventions for starting a linked process.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">start_link</span><span class="p">(</span><span class="n">_arg</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the 404 counter..."</span>
+  <span class="nc">GenServer</span><span class="p">.</span><span class="n">start_link</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="p">%{},</span> <span class="ss">name</span><span class="p">:</span> <span class="na">@name</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then add it as a child of a supervisor. You can either add it to the existing <tt>ServicesSupervisor</tt> or create an entirely new supervisor and add that supervisor to the supervision tree.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="c1"># In ServicesSupervisor, for example:</span>
+
+<span class="n">children</span> <span class="p">=</span> <span class="p">[</span>
+  <span class="nc">Servy.PledgeServer</span><span class="p">,</span>
+  <span class="p">{</span><span class="nc">Servy.SensorServer</span><span class="p">,</span> <span class="mi">60</span><span class="p">},</span>
+<span class="hll">  <span class="nc">Servy.FourOhFourCounter</span>
+</span><span class="p">]</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>supervisors</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/747/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

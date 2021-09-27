@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/48 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./23The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./23The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./23The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="mbQvahsAloeXlfRh/AJGpLnFYGRv+g7jxN6MaqdWMSTyvQo462zQTVofGEQGvG+pDveN0GXTdytt4niqCGEEPA==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./23The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Asynchronous Tasks</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Prepared Code</h3>
+<p>
+  Here's the <tt>Tracker</tt> module we already had defined in the <tt>tracker.ex</tt> file:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.Tracker</span> <span class="k">do</span>
+  <span class="na">@doc</span> <span class="sh">"""</span>
+<span class="sh">  Simulates sending a request to an external API</span>
+<span class="sh">  to get the GPS coordinates of a wildthing.</span>
+<span class="sh">  """</span>
+  <span class="kd">def</span> <span class="n">get_location</span><span class="p">(</span><span class="n">wildthing</span><span class="p">)</span> <span class="k">do</span>
+    <span class="c1"># CODE GOES HERE TO SEND A REQUEST TO THE EXTERNAL API</span>
+
+    <span class="c1"># Sleep to simulate the API delay:</span>
+    <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+
+    <span class="c1"># Example responses returned from the API:</span>
+    <span class="n">locations</span> <span class="p">=</span> <span class="p">%{</span>
+      <span class="s2">"roscoe"</span>  <span class="p">=&gt;</span> <span class="p">%{</span> <span class="ss">lat</span><span class="p">:</span> <span class="s2">"44.4280 N"</span><span class="p">,</span> <span class="ss">lng</span><span class="p">:</span> <span class="s2">"110.5885 W"</span><span class="p">},</span>
+      <span class="s2">"smokey"</span>  <span class="p">=&gt;</span> <span class="p">%{</span> <span class="ss">lat</span><span class="p">:</span> <span class="s2">"48.7596 N"</span><span class="p">,</span> <span class="ss">lng</span><span class="p">:</span> <span class="s2">"113.7870 W"</span><span class="p">},</span>
+      <span class="s2">"brutus"</span>  <span class="p">=&gt;</span> <span class="p">%{</span> <span class="ss">lat</span><span class="p">:</span> <span class="s2">"43.7904 N"</span><span class="p">,</span> <span class="ss">lng</span><span class="p">:</span> <span class="s2">"110.6818 W"</span><span class="p">},</span>
+      <span class="s2">"bigfoot"</span> <span class="p">=&gt;</span> <span class="p">%{</span> <span class="ss">lat</span><span class="p">:</span> <span class="s2">"29.0469 N"</span><span class="p">,</span> <span class="ss">lng</span><span class="p">:</span> <span class="s2">"98.8667 W"</span><span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nc">Map</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">locations</span><span class="p">,</span> <span class="n">wildthing</span><span class="p">)</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+
+<h3>Another Way With MFA</h3>
+<p>
+  In the video we passed an anonymous function to <tt>Task.async</tt>, like so: 
+</p>
+<div class="highlight"><pre><span class="n">task</span> <span class="p">=</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="nc">Servy.Tracker</span><span class="p">.</span><span class="n">get_location</span><span class="p">(</span><span class="s2">"bigfoot"</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+</pre></div>
+<p>
+  It should come as no surprise that instead of an anonymous function you can pass a module name, function name, and the function's arguments (MFA):
+</p>
+<div class="highlight"><pre><span class="n">task</span> <span class="p">=</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="nc">Servy.Tracker</span><span class="p">,</span> <span class="ss">:get_location</span><span class="p">,</span> <span class="p">[</span><span class="s2">"bigfoot"</span><span class="p">])</span>
+</pre></div>
+
+<h3>Tip: Using an After Clause</h3>
+<p>
+  It's worth considering what happens if an asynchronous task takes a really long time, or if the spawned process crashes before it sends the message back to the parent process. For example, suppose we use the <tt>Fetcher</tt> module we wrote to fire off a task that sends an API request and then we wait for the result:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">pid</span> <span class="p">=</span> <span class="nc">Fetcher</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="nc">Servy.Tracker</span><span class="p">.</span><span class="n">get_location</span><span class="p">(</span><span class="s2">"bigfoot"</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Fetcher</span><span class="p">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+</pre></div>
+<p>
+  But imagine Bigfoot is <em>really</em> difficult to locate, so the API request ends up taking, say, 10 seconds before it locates our hairy friend. In the meantime, the call to <tt>Fetcher.get_result</tt> hangs because remember how it's implemented:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">get_result</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">do</span>
+  <span class="k">receive</span> <span class="k">do</span> <span class="p">{</span><span class="o">^</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:result</span><span class="p">,</span> <span class="n">value</span><span class="p">}</span> <span class="p">-&gt;</span> <span class="n">value</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  The <tt>receive</tt> will wait indefinitely for a matching message to arrive. If the API is just slow, then eventually a message will arrive. But if for some reason the spawned process crashes before sending a message, then a message will <em>never</em> arrive.
+</p>
+<p>
+  Rather than waiting indefinitely, we can add a timeout clause to 
+  <tt>receive</tt>, like so:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">get_result</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">do</span>
+  <span class="k">receive</span> <span class="k">do</span> 
+    <span class="p">{</span><span class="o">^</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:result</span><span class="p">,</span> <span class="n">value</span><span class="p">}</span> <span class="p">-&gt;</span> <span class="n">value</span> 
+<span class="hll">  <span class="k">after</span> <span class="mi">2000</span> <span class="p">-&gt;</span>
+</span><span class="hll">    <span class="k">raise</span> <span class="s2">"Timed out!"</span>
+</span>  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Now if a matching message doesn't arrive within 2 seconds (2000 milliseconds) of <tt>get_result</tt> being called then the <tt>after</tt> block is run. In this case we raise an exception, but you can do whatever is appropriate for your app in the <tt>after</tt> block.
+</p>
+<p>
+  You can try this out by running a function that takes longer than the timeout value:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">pid</span> <span class="p">=</span> <span class="nc">Servy.Fetcher</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">4000</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.Fetcher</span><span class="p">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+<span class="o">**</span> <span class="p">(</span><span class="nc">RuntimeError</span><span class="p">)</span> <span class="nc">Timed</span> <span class="n">out!</span>
+</pre></div>
+
+<h3>Task Timeout</h3>
+<p>
+  By default, <tt>Task.await</tt> has a built-in timeout of 5 seconds. If the task doesn't complete within that time, an exception is raised. Try this to see it in action:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">task</span> <span class="p">=</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">7000</span><span class="p">);</span> <span class="s2">"Done!"</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Task</span><span class="p">.</span><span class="n">await</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+<span class="o">**</span> <span class="p">(</span><span class="n">exit</span><span class="p">)</span> <span class="n">exited</span> <span class="ss">in</span><span class="p">:</span> <span class="nc">Task</span><span class="p">.</span><span class="n">await</span><span class="p">(%</span><span class="nc">Task</span><span class="p">{</span><span class="ss">owner</span><span class="p">:</span> <span class="c1">#PID&lt;0.163.0&gt;, pid: #PID&lt;0.200.0&gt;, ref: #Reference&lt;0.1371140241.2411724801.162602&gt;}, 5000)</span>
+    <span class="o">**</span> <span class="p">(</span><span class="nc">EXIT</span><span class="p">)</span> <span class="n">time</span> <span class="n">out</span>
+</pre></div>
+<p>
+  You can override the default timeout by passing a specific timeout value (in milliseconds) as the second argument to <tt>Task.await</tt>:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">task</span> <span class="p">=</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">7000</span><span class="p">);</span> <span class="s2">"Done!"</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Task</span><span class="p">.</span><span class="n">await</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">7000</span><span class="p">)</span>
+<span class="s2">"Done!"</span>
+</pre></div>
+<p>
+  And if you want to wait indefinitely for a result, use <tt>:infinity</tt> as the timeout value:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">task</span> <span class="p">=</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">20000</span><span class="p">);</span> <span class="s2">"Done!"</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Task</span><span class="p">.</span><span class="n">await</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="ss">:infinity</span><span class="p">)</span>
+<span class="s2">"Done!"</span>
+</pre></div>
+<p></p>
+
+<h3>Running a Task with a Cut-Off Time</h3>
+<p>
+  Because <tt>Task.await</tt> waits for a message to arrive, you can only call <tt>Task.await</tt> once for any given task. In certain situations you may want to be able to check if a long-running task has finished. There's where <tt>Task.yield</tt> comes in really handy:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">task</span> <span class="p">=</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">8000</span><span class="p">);</span> <span class="s2">"Done!"</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Task</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span>
+<span class="no">nil</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Task</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span>
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="s2">"Done!"</span><span class="p">}</span>
+</pre></div>
+<p>
+  The first time we call <tt>Task.yield</tt> it starts waiting for 5 seconds and, because a message doesn't arrive by that cut-off time, <tt>nil</tt> is returned. Then we call <tt>Task.yield</tt> again which starts waiting for 5 seconds and, because a message arrives during that time, the tuple <tt>{:ok, "Done"}</tt> is returned. 
+</p>
+<p>
+  In this way, you can check if a long-running task has finished or not and act accordingly. For example:
+</p>
+<div class="highlight"><pre><span class="k">case</span> <span class="nc">Task</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">result</span><span class="p">}</span> <span class="p">-&gt;</span>
+    <span class="n">result</span>
+  <span class="no">nil</span> <span class="p">-&gt;</span>
+    <span class="nc">Logger</span><span class="p">.</span><span class="n">warn</span> <span class="s2">"Timed out!"</span>
+    <span class="nc">Task</span><span class="p">.</span><span class="n">shutdown</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  In this example, if a message doesn't arrive within the 5 second cut-off then we shut down the task by calling <tt>Task.shutdown</tt>. If a message arrives while shutting down the task, then <tt>Task.shutdown</tt> returns <tt>{:ok, result}</tt>. Otherwise it returns <tt>nil</tt>.
+</p>
+
+<h3>Tip: Converting Milliseconds to Human-Friendly Units</h3>
+<p>
+  We've seen a number of functions that take a time expressed in milliseconds. But our brains aren't really attuned to thinking of time this way. If you're like us, you'll appreciate that the Erlang <tt>timer</tt> module has handy conversion functions:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">seconds</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="mi">5000</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">minutes</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="mi">300000</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">hours</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="mi">18000000</span>
+</pre></div>
+<p>
+  Using these functions tends to make your application code more expressive. For example:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Task</span><span class="p">.</span><span class="n">await</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="ss">:timer</span><span class="p">.</span><span class="n">seconds</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
+</pre></div>
+
+<h3>Exercise: Change HttpServerTest to Use Tasks</h3>
+<p>
+  In an <a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">earlier exercise</a> you changed <tt>HttpServerTest</tt> to send
+  5 requests concurrently using <tt>send</tt> and <tt>receive</tt>. Now that you know about <tt>Task</tt>, change the test to use it.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">HttpServerTest</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">ExUnit.Case</span>
+
+  <span class="kn">alias</span> <span class="nc">Servy.HttpServer</span>
+
+  <span class="n">test</span> <span class="s2">"accepts a request on a socket and sends back a response"</span> <span class="k">do</span>
+    <span class="n">spawn</span><span class="p">(</span><span class="nc">HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+
+    <span class="n">url</span> <span class="p">=</span> <span class="s2">"http://localhost:4000/wildthings"</span>
+
+    <span class="mi">1</span><span class="p">..</span><span class="mi">5</span>
+    <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="k">fn</span><span class="p">(</span><span class="bp">_</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+    <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="nc">Task</span><span class="p">.</span><span class="n">await</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span>
+    <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="n">assert_successful_response</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">assert_successful_response</span><span class="p">({</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">})</span> <span class="k">do</span>
+    <span class="n">assert</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+    <span class="n">assert</span> <span class="n">response</span><span class="p">.</span><span class="n">body</span> <span class="o">==</span> <span class="s2">"Bears, Lions, Tigers"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Change HttpServerTest to Check Multiple URLs</h3>
+<p>
+  Once you've completed the previous exercise, can you see a way to change the <tt>HttpServerTest</tt> to send a request for a different URL in each spawned process and assert that they all respond with a 200 status code? You know, to quickly run a sanity check of multiple pages on your site.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">HttpServerTest</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">ExUnit.Case</span>
+
+  <span class="kn">alias</span> <span class="nc">Servy.HttpServer</span>
+
+  <span class="n">test</span> <span class="s2">"accepts a request on a socket and sends back a response"</span> <span class="k">do</span>
+    <span class="n">spawn</span><span class="p">(</span><span class="nc">HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+
+    <span class="n">urls</span> <span class="p">=</span> <span class="p">[</span>
+      <span class="s2">"http://localhost:4000/wildthings"</span><span class="p">,</span>
+      <span class="s2">"http://localhost:4000/bears"</span><span class="p">,</span>
+      <span class="s2">"http://localhost:4000/bears/1"</span><span class="p">,</span>
+      <span class="s2">"http://localhost:4000/wildlife"</span><span class="p">,</span>
+      <span class="s2">"http://localhost:4000/api/bears"</span>
+    <span class="p">]</span>
+
+    <span class="n">urls</span>
+    <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="ni">&amp;1</span><span class="p">)</span> <span class="k">end</span><span class="p">))</span>
+    <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="nc">Task</span><span class="p">.</span><span class="n">await</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span>
+    <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="n">assert_successful_response</span><span class="o">/</span><span class="mi">1</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">assert_successful_response</span><span class="p">({</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">})</span> <span class="k">do</span>
+    <span class="n">assert</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Render the Results</h3>
+<p>
+  In the video we didn't worry about how the snapshot images and GPS locations would get rendered on a page since you already know how to render template files. Want some practice doing that? As they say: Practice makes permanent!
+</p>
+<p>
+  You'll recall that we simply put the results in a tuple and inspected it, which became the response body:
+</p>
+<div class="highlight"><pre><span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> 
+          <span class="ss">resp_body</span><span class="p">:</span> <span class="n">inspect</span> <span class="p">{</span><span class="n">snapshots</span><span class="p">,</span> <span class="n">where_is_bigfoot</span><span class="p">}</span> <span class="p">}</span>
+</pre></div>
+<p>
+  Now, rather than simply inspecting a map, you instead want to render the values of <tt>snapshots</tt> and <tt>where_is_bigfoot</tt> using a template file.
+</p>
+<p>
+  Give it a try on your own first before following the steps below.
+</p>
+<p>
+  In an <a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">earlier exercise</a> you moved the <tt>render/3</tt> function into the
+  <tt>View</tt> module. First you'll need to import that function into 
+  the <tt>Handler</tt> module.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kn">import</span> <span class="nc">Servy.View</span><span class="p">,</span> <span class="ss">only</span><span class="p">:</span> <span class="p">[</span><span class="ss">render</span><span class="p">:</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then use it to render a template named <tt>sensors.eex</tt>, for example, and supply the values of <tt>snapshots</tt> and <tt>where_is_bigfoot</tt>
+  as a keyword list.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">render</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="s2">"sensors.eex"</span><span class="p">,</span> <span class="ss">snapshots</span><span class="p">:</span> <span class="n">snapshots</span><span class="p">,</span> <span class="ss">location</span><span class="p">:</span> <span class="n">where_is_bigfoot</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Finally, in the <tt>templates</tt> directory create a <tt>sensors.eex</tt> template file that renders the snapshots and GPS location.
+</p>
+
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="nt">&lt;h1&gt;</span>Sensors<span class="nt">&lt;/h1&gt;</span>
+
+<span class="nt">&lt;h2&gt;</span>Snapshots<span class="nt">&lt;/h2&gt;</span>
+<span class="nt">&lt;ul&gt;</span>
+  <span class="cp">&lt;%=</span> <span class="k">for</span> <span class="n">snapshot</span> <span class="o">&lt;-</span> <span class="n">snapshots</span> <span class="k">do</span> <span class="cp">%&gt;</span>
+    <span class="nt">&lt;li&gt;&lt;img</span> <span class="na">src=</span><span class="s">"</span><span class="cp">&lt;%=</span> <span class="n">snapshot</span> <span class="cp">%&gt;</span><span class="s">"</span> <span class="na">alt=</span><span class="s">"snapshot"</span><span class="nt">&gt;&lt;/li&gt;</span>
+  <span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+<span class="nt">&lt;/ul&gt;</span>
+
+<span class="nt">&lt;h2&gt;</span>Where Is Bigfoot?<span class="nt">&lt;/h2&gt;</span>
+<span class="cp">&lt;%=</span> <span class="nb">inspect</span> <span class="n">location</span> <span class="cp">%&gt;</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  
+</p>
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>tasks</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/731/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

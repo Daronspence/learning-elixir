@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/61 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./28The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./28The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./28The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="WvoJWaTulceLqwNR7hoRDdtvsP+aGLWmkNkIJvrLuOUx8ywLVILTDUYh73QUpDgAbF1dS5AxzG455fzmVfyN/Q==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./28The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Linking Processes</h1>
+<h2 class="subtitle">Notes</h2>
+
+
+<h3>Normal vs. Abnormal Process Termination</h3>
+<p>
+  When a process terminates, whether normally (it finishes doing all its work) or abnormally (due to a crash), it notifies the linked process by sending it an <em>exit signal</em>.
+</p>
+<p>
+  In the case of a process terminating normally, the exit signal reason is always the atom <tt>:normal</tt>. And because the process exited normally, the linked process does not terminate.
+</p>
+<p>
+  In the case of a process terminating <em>abnormally</em>, the exit signal reason will be anything other than the atom <tt>:normal</tt>. For example, in the video we used the reason <tt>:kaboom</tt>. You could just as well use <tt>:crash</tt> or <tt>:whoopsie</tt>. By default, if the exit signal indicates that the process terminated abnormally, the linked process terminates with the same reason <em>unless</em> the linked process is trapping exits. If it's trapping exits, then the linked process does not terminate. Instead, the exit signal is converted to a message that's sent to the mailbox of the linked process.
+</p>
+
+<h3>Monitoring a Process</h3>
+<p>
+  In the video we used a link to allow the <tt>KickStarter</tt> process to detect when the <tt>HttpServer</tt> process crashed. Because links are always bi-directional, if the <tt>KickStarter</tt> process itself crashes then it causes the <tt>HttpServer</tt> process to crash as well. That's a good thing: it means an <tt>HttpServer</tt> process isn't left dangling (orphaned) if the <tt>KickStarter</tt> process crashes.
+</p>
+<p>
+  But sometimes a process needs to monitor another process to detect if it crashes (or terminates normally), but you don't want their fates to be tied together. That's where using a <em>monitor</em> can be handy. Whereas a link is bidirectional, a monitor is <em>unidirectional</em>. 
+</p>
+<p>
+  For example, let's say we have a process chugging away:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">pid</span> <span class="p">=</span> <span class="n">spawn</span><span class="p">(</span><span class="nc">Servy.HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+</pre></div>
+<p>
+  And we want the <tt>iex</tt> process to passively monitor that process without linking itself to it. To do that, use <tt>Process.monitor/1</tt> rather than <tt>Process.link/1</tt>, like so:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">monitor</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+<span class="c1">#Reference&lt;0.2181247014.667942918.240804&gt;</span>
+</pre></div>
+<p>
+  It returns a unique reference which can be used to stop monitoring the process if necessary using <tt>Process.demonitor/1</tt>.
+</p>
+<p>
+  So now let's crash the <tt>HttpServer</tt> process being monitored:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">exit</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:kaboom</span><span class="p">)</span>
+</pre></div>
+<p>
+  Notice it didn't bring down the <tt>iex</tt> process because unlike a link, a monitor isn't bidirectional. The naming makes sense: When you <em>monitor</em> a process you just want to be notified if it terminates. Whereas when you <em>link</em> to a process, you both agree to notify the other if one of you terminates.
+</p>
+<p>
+  And as promised, the <tt>iex</tt> process received a notification message in its mailbox:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">flush</span><span class="p">()</span>
+<span class="p">{</span><span class="ss">:DOWN</span><span class="p">,</span> <span class="c1">#Reference&lt;0.2181247014.667942918.240804&gt;, :process, #PID&lt;0.323.0&gt;,</span>
+ <span class="ss">:kaboom</span><span class="p">}</span>
+</pre></div>
+<p>
+  The message includes the atom <tt>:DOWN</tt>, the monitor reference we saw earlier, the PID of the process that terminated, and a reason that indicates why the process terminated.
+</p>
+<p>
+  You may not need to monitor a process very often (if ever), but it's useful to know that you have both links and monitors at your disposal.
+</p>
+
+<h3>Linking Tasks</h3>
+<p>
+  Earlier in the course we used <tt>Task.async</tt> to spawn a process that runs a function and then used <tt>Task.await</tt> to await the result. For example:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">pid</span> <span class="p">=</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="nc">Servy.Tracker</span><span class="p">.</span><span class="n">get_location</span><span class="p">(</span><span class="s2">"bigfoot"</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Task</span><span class="p">.</span><span class="n">await</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+<span class="p">%{</span><span class="ss">lat</span><span class="p">:</span> <span class="s2">"29.0469 N"</span><span class="p">,</span> <span class="ss">lng</span><span class="p">:</span> <span class="s2">"98.8667 W"</span><span class="p">}</span>
+</pre></div>
+<p>
+  It's worth noting that the spawned process is automatically linked to the calling process. Thus, if the spawned process crashes, then the process that called <tt>Task.async</tt> will crash too.
+</p>
+<p>
+  To demonstrate that, we'll raise an exception in the spawned process:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">pid</span> <span class="p">=</span> <span class="nc">Task</span><span class="p">.</span><span class="n">async</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="k">raise</span> <span class="s2">"Kaboom!"</span> <span class="k">end</span><span class="p">)</span>
+</pre></div>
+<p>
+  This in turn causes the <tt>iex</tt> process to crash:
+</p>
+<div class="highlight"><pre><span class="o">**</span> <span class="p">(</span><span class="nc">EXIT</span> <span class="n">from</span> <span class="c1">#PID&lt;0.368.0&gt;) evaluator process exited with reason: an exception was raised:</span>
+    <span class="o">**</span> <span class="p">(</span><span class="nc">RuntimeError</span><span class="p">)</span> <span class="nc">Kaboom</span><span class="o">!</span>
+</pre></div>
+<p>
+  And the reverse is also true: If the <tt>iex</tt> process crashes then it takes down the process spawned by <tt>Task.async</tt>.
+</p>
+<p>
+  That's generally what you want to have happen. The calling process needs to be able to detect if the spawned process crashes. And if the calling process itself crashes, then there's no point in the task sending its result back to that process.
+</p>
+
+<h3>Exercise: Get the Server Process</h3>
+<p>
+  In the video, when the <tt>KickStarter</tt> started an <tt>HttpServer</tt> process we registered that process under the name <tt>:http_server</tt>:
+</p>
+<div class="highlight"><pre><span class="kd">defp</span> <span class="n">start_server</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the HTTP server..."</span>
+  <span class="n">server_pid</span> <span class="p">=</span> <span class="n">spawn_link</span><span class="p">(</span><span class="nc">Servy.HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+<span class="hll">  <span class="nc">Process</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">server_pid</span><span class="p">,</span> <span class="ss">:http_server</span><span class="p">)</span>
+</span>  <span class="n">server_pid</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  By registering it, we could then find the <tt>HttpServer</tt> process and manually crash it:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">server_pid</span> <span class="p">=</span> <span class="nc">Process</span><span class="p">.</span><span class="n">whereis</span><span class="p">(</span><span class="ss">:http_server</span><span class="p">)</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">exit</span><span class="p">(</span><span class="n">server_pid</span><span class="p">,</span> <span class="ss">:kaboom</span><span class="p">)</span>
+</pre></div>
+<p>
+  Another way to get access to the current <tt>HttpServer</tt> process would be to provide a client interface function named <tt>get_server</tt>, for example, that returned the PID of the <tt>HttpServer</tt> process which is already stored in the state of the <tt>KickStarter</tt> process.
+</p>
+<p>
+  Here's an example of how that would work:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">kick_pid</span><span class="p">}</span> <span class="p">=</span> <span class="nc">Servy.KickStarter</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="n">server_pid</span> <span class="p">=</span> <span class="nc">Servy.KickStarter</span><span class="p">.</span><span class="n">get_server</span><span class="p">()</span>
+<span class="c1">#PID&lt;0.166.0&gt;</span>
+</pre></div>
+<p>
+  For more practice with GenServer API design, change the <tt>KickStarter</tt> to support that client interface function.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.KickStarter</span> <span class="k">do</span>
+
+  <span class="kn">use</span> <span class="nc">GenServer</span>
+
+  <span class="c1"># Client Interface</span>
+
+  <span class="kd">def</span> <span class="n">start</span> <span class="k">do</span>
+    <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the kickstarter..."</span>
+    <span class="nc">GenServer</span><span class="p">.</span><span class="n">start</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:ok</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="bp">__MODULE__</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">get_server</span> <span class="k">do</span>
+    <span class="nc">GenServer</span><span class="p">.</span><span class="n">call</span> <span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:get_server</span>
+  <span class="k">end</span>
+
+  <span class="c1"># Server Callbacks</span>
+
+  <span class="kd">def</span> <span class="n">init</span><span class="p">(</span><span class="ss">:ok</span><span class="p">)</span> <span class="k">do</span>
+    <span class="nc">Process</span><span class="p">.</span><span class="n">flag</span><span class="p">(</span><span class="ss">:trap_exit</span><span class="p">,</span> <span class="no">true</span><span class="p">)</span>
+    <span class="n">server_pid</span> <span class="p">=</span> <span class="n">start_server</span><span class="p">()</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">server_pid</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">handle_call</span><span class="p">(</span><span class="ss">:get_server</span><span class="p">,</span> <span class="n">_from</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:reply</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">state</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">handle_info</span><span class="p">({</span><span class="ss">:EXIT</span><span class="p">,</span> <span class="n">_pid</span><span class="p">,</span> <span class="n">reason</span><span class="p">},</span> <span class="n">_state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"HttpServer exited (</span><span class="si">#{</span><span class="n">inspect</span> <span class="n">reason</span><span class="si">}</span><span class="s2">)"</span>
+    <span class="n">server_pid</span> <span class="p">=</span> <span class="n">start_server</span><span class="p">()</span>
+    <span class="p">{</span><span class="ss">:noreply</span><span class="p">,</span> <span class="n">server_pid</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">start_server</span> <span class="k">do</span>
+    <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the HTTP server..."</span>
+    <span class="n">spawn_link</span><span class="p">(</span><span class="nc">Servy.HttpServer</span><span class="p">,</span> <span class="ss">:start</span><span class="p">,</span> <span class="p">[</span><span class="mi">4000</span><span class="p">])</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>linking-processes</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/744/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

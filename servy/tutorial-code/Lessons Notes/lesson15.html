@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/31 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./15The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./15The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./15The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="ywSmFaXaBXqcYBlOeksIClDVmWkqZ7TG1l4uY6jLRYygDYNHVbZDsFHq9WuA9SEH5+d03SBOzQ5/YtqjB/xwlA==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./15The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Slicing and Dicing with Enum</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>A 10-Pack of Bears 🐻</h3>
+<p>
+  Here's the list of bears we pasted in the video:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">list_bears</span> <span class="k">do</span>
+  <span class="p">[</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Teddy"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Brown"</span><span class="p">,</span> <span class="ss">hibernating</span><span class="p">:</span> <span class="no">true</span><span class="p">},</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Smokey"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Black"</span><span class="p">},</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Paddington"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Brown"</span><span class="p">},</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Scarface"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Grizzly"</span><span class="p">,</span> <span class="ss">hibernating</span><span class="p">:</span> <span class="no">true</span><span class="p">},</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Snow"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Polar"</span><span class="p">},</span>      
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Brutus"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Grizzly"</span><span class="p">},</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Rosie"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Black"</span><span class="p">,</span> <span class="ss">hibernating</span><span class="p">:</span> <span class="no">true</span><span class="p">},</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Roscoe"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Panda"</span><span class="p">},</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Iceman"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Polar"</span><span class="p">,</span> <span class="ss">hibernating</span><span class="p">:</span> <span class="no">true</span><span class="p">},</span>
+    <span class="p">%</span><span class="nc">Bear</span><span class="p">{</span><span class="ss">id</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="ss">name</span><span class="p">:</span> <span class="s2">"Kenai"</span><span class="p">,</span> <span class="ss">type</span><span class="p">:</span> <span class="s2">"Grizzly"</span><span class="p">}</span>
+  <span class="p">]</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  As always, feel free to use whatever type of resources you fancy.
+  The actual data really doesn't matter! Hungry? You could use a 10-pack
+  of tacos. 🌮
+</p>
+<p>
+  <em>Warning: Bears love tacos.</em>
+</p>
+
+<h3></h3>
+<h3>Exercise: Delegate DELETE to a Controller Action</h3>
+<p>
+  In a previous exercise you defined a route that handles a <tt>DELETE</tt> request. Change the route to delegate to a new function/action in
+  the <tt>BearController</tt>.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="c1"># in handler.ex</span>
+
+<span class="kd">def</span> <span class="n">route</span><span class="p">(%{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"DELETE"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/bears/"</span> <span class="o">&lt;&gt;</span> <span class="n">_id</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">BearController</span><span class="p">.</span><span class="n">delete</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">conv</span><span class="p">.</span><span class="n">params</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="c1"># in bear_controller.ex</span>
+
+<span class="kd">def</span> <span class="n">delete</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">_params</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">403</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="s2">"Deleting a bear is forbidden!"</span><span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Capturing Expressions</h3>
+<p>
+  In the video we used the <tt>&amp;</tt> operator to capture named functions. For example, we captured the <tt>String.upcase</tt> function:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">phrases</span> <span class="p">=</span> <span class="p">[</span><span class="s2">"lions"</span><span class="p">,</span> <span class="s2">"tigers"</span><span class="p">,</span> <span class="s2">"bears"</span><span class="p">,</span> <span class="s2">"oh my"</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">phrases</span><span class="p">,</span> <span class="o">&amp;</span><span class="nc">String</span><span class="p">.</span><span class="n">upcase</span><span class="p">(</span><span class="ni">&amp;1</span><span class="p">))</span>
+<span class="p">[</span><span class="s2">"LIONS"</span><span class="p">,</span> <span class="s2">"TIGERS"</span><span class="p">,</span> <span class="s2">"BEARS"</span><span class="p">,</span> <span class="s2">"OH MY"</span><span class="p">]</span>
+</pre></div>
+<p>
+  The <tt>&amp;</tt> capture operator creates an anonymous function that calls <tt>String.upcase</tt>.  The <tt>&amp;1</tt> is a placeholder for the first argument passed to the function. It's shorthand for doing this:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">phrases</span><span class="p">,</span> <span class="k">fn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nc">String</span><span class="p">.</span><span class="n">upcase</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
+<span class="p">[</span><span class="s2">"LIONS"</span><span class="p">,</span> <span class="s2">"TIGERS"</span><span class="p">,</span> <span class="s2">"BEARS"</span><span class="p">,</span> <span class="s2">"OH MY"</span><span class="p">]</span>
+</pre></div>
+<p>
+  You can also use the <tt>&amp;</tt> operator to capture expressions. For example, in the video we saw how to triple a list of numbers by calling
+  <tt>map</tt> with a list and an anonymous "tripler" function:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="k">fn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">3</span> <span class="k">end</span><span class="p">)</span>
+<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+</pre></div>
+<p>
+  Here's the shorthand way using the <tt>&amp;</tt> capture operator:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+</pre></div>
+<p>
+  Notice we surrounded the expression <tt>&amp;1 * 3</tt> with parentheses and
+  captured that expression. The result of <tt>&amp;(&amp;1 * 3)</tt> is an anonymous
+  function.
+</p>
+<p>
+  Alternatively, you can capture the expression as an anonymous function, bind it to a variable, and then pass the function to the higher-order <tt>map</tt> function:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">triple</span> <span class="p">=</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+<span class="c1">#Function&lt;6.118419387/1 in :erl_eval.expr/5&gt;</span>
+
+<span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">triple</span><span class="p">)</span>
+<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+</pre></div>
+
+<h3>Exercise: Capture Functions</h3>
+<p>
+  Just for extra practice and to build muscle memory, in <tt>iex</tt> first write an anonymous function that adds two numbers and call it.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="o">&gt;</span> <span class="n">add</span> <span class="p">=</span> <span class="k">fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="k">end</span>
+
+<span class="o">&gt;</span> <span class="n">add</span><span class="p">.(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="mi">3</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then write a shorthand version that uses the <tt>&amp;</tt> capture operator.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="o">&gt;</span> <span class="n">add</span> <span class="p">=</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">+</span> <span class="ni">&amp;2</span><span class="p">)</span>
+
+<span class="o">&gt;</span> <span class="n">add</span><span class="p">.(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="mi">8</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then look up the documentation for the <tt>String.duplicate</tt> function. 
+  Can you think of two ways to capture it? Try both ways and call the result with your favorite repetitive phrases.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="o">&gt;</span> <span class="n">repeat</span> <span class="p">=</span> <span class="o">&amp;</span><span class="nc">String</span><span class="p">.</span><span class="n">duplicate</span><span class="p">(</span><span class="ni">&amp;1</span><span class="p">,</span> <span class="ni">&amp;2</span><span class="p">)</span>
+
+<span class="o">&gt;</span> <span class="n">repeat</span><span class="p">.(</span><span class="s2">"Yo"</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="s2">"YoYo"</span>
+
+<span class="o">&gt;</span> <span class="n">repeat</span> <span class="p">=</span> <span class="o">&amp;</span><span class="nc">String</span><span class="p">.</span><span class="n">duplicate</span><span class="o">/</span><span class="mi">2</span>
+
+<span class="o">&gt;</span> <span class="n">repeat</span><span class="p">.(</span><span class="s2">"Go"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="s2">"GoGoGo"</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Guard Clause Limitations</h3>
+<p>
+  In the video we used two "type-check" functions in the guard expressions: <tt>is_integer</tt> and <tt>is_binary</tt>. You might be wondering what else you can use in guard expressions. Spend a minute looking through the 
+  <a href="https://hexdocs.pm/elixir/master/guards.html#list-of-allowed-expressions" target="_blank">list of allowed expressions</a>.
+</p>
+
+<h3>Tip: Summing</h3>
+<p>
+  In a previous exercise you used recursion to iterate through a list of numbers and accumulate the total. Well, <tt>Enum.sum</tt> does that for you. 
+  And now you know how it works! Check out the documentation and give it a whirl. 
+</p>
+
+<h3>Exercise: Implement map</h3>
+<p>
+  In a previous exercise you used recursion to triple all the numbers in a given list, like so:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Recurse</span> <span class="k">do</span>
+  <span class="kd">def</span> <span class="n">triple</span><span class="p">([</span><span class="n">head</span><span class="p">|</span><span class="n">tail</span><span class="p">])</span> <span class="k">do</span>
+    <span class="p">[</span><span class="n">head</span><span class="o">*</span><span class="mi">3</span> <span class="p">|</span> <span class="n">triple</span><span class="p">(</span><span class="n">tail</span><span class="p">)]</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">triple</span><span class="p">([]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[]</span>
+<span class="k">end</span>
+
+<span class="nc">IO</span><span class="p">.</span><span class="n">inspect</span> <span class="nc">Recurse</span><span class="p">.</span><span class="n">triple</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+</pre></div>
+<p>
+  The result is a new list of tripled numbers:
+</p>
+<div class="highlight"><pre><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">15</span><span class="p">]</span>
+</pre></div>
+<p>
+  What if you wanted to double, quadruple, or even <em>quintuple</em> all the numbers in the list? Well, you know how to write separate functions for each of those operations. 
+</p>
+<p>
+  But you also now know that there's a general way using <tt>Enum.map</tt>:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">nums</span> <span class="p">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+<span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">*</span> <span class="mi">4</span><span class="p">))</span>
+<span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">*</span> <span class="mi">5</span><span class="p">))</span>
+<span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">25</span><span class="p">]</span>
+</pre></div>
+<p>
+  So how does <tt>map</tt> work? As the documentation says, it returns a new list where each item is the resulting of invoking the function on each corresponding item of the list. Right, but <em>how</em> does it do that? 
+</p>
+<p>
+  Well, you already know that too! You know how to recursively traverse a list. And you know how to create a new list from a head and a tail. <em>And</em> you now know how to invoke an anonymous function. So you can implement your own version of <tt>map</tt> to validate what you already know!
+</p>
+<p>
+  In the <tt>Recurse</tt> module (or a stand-alone module of your choosing), define a <tt>my_map</tt>
+  function that acts just like <tt>Enum.map</tt>. For example:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">nums</span> <span class="p">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="nc">Recurse</span><span class="p">.</span><span class="n">my_map</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+<span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="nc">Recurse</span><span class="p">.</span><span class="n">my_map</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">*</span> <span class="mi">4</span><span class="p">))</span>
+<span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="nc">Recurse</span><span class="p">.</span><span class="n">my_map</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="ni">&amp;1</span> <span class="o">*</span> <span class="mi">5</span><span class="p">))</span>
+<span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">25</span><span class="p">]</span>
+</pre></div>
+<p></p>
+        <div class="toggle-two">
+          <ul>
+            <li>
+                      <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Hint</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Hint</span>
+        </a>
+      </p>
+
+            </li>
+            <li>
+                      <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+            </li>
+          </ul>
+          <div style="display:none;">
+            <p class="hint">The <tt>my_map</tt> functions are similar to the <tt>triple</tt> functions, but with a slight twist. The <tt>my_map</tt> functions need to take two arguments: a list and a function. Recursively traverse the list, calling the anonymous function with the head at each step and calling itself (<tt>my_map</tt>) with the tail.</p>
+          </div>
+          <div style="display:none; padding-top: 1em;">
+            <div class="highlight"><pre><span class="n">defmodule</span> <span class="no">Recurse</span> <span class="k">do</span>
+  <span class="k">def</span> <span class="nf">my_map</span><span class="p">(</span><span class="o">[</span><span class="n">head</span><span class="o">|</span><span class="n">tail</span><span class="o">]</span><span class="p">,</span> <span class="n">fun</span><span class="p">)</span> <span class="k">do</span>
+    <span class="o">[</span><span class="n">fun</span><span class="o">.</span><span class="p">(</span><span class="n">head</span><span class="p">)</span> <span class="o">|</span> <span class="n">my_map</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">fun</span><span class="p">)</span><span class="o">]</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">my_map</span><span class="p">(</span><span class="o">[]</span><span class="p">,</span> <span class="n">_fun</span><span class="p">),</span> <span class="k">do</span><span class="p">:</span> <span class="o">[]</span>
+<span class="k">end</span>
+</pre></div>
+          </div>
+        </div>
+
+
+<h3>Exercise: Reduce the Headers</h3>
+<p>
+  In a previous video we parsed the request headers by recursively traversing the list of header lines, parsing each line into a key and a value, and accumulating the key-value pairs in a <tt>headers</tt> map:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">parse_headers</span><span class="p">([</span><span class="n">head</span> <span class="p">|</span> <span class="n">tail</span><span class="p">],</span> <span class="n">headers</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">]</span> <span class="p">=</span> <span class="nc">String</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="s2">": "</span><span class="p">)</span>
+  <span class="n">headers</span> <span class="p">=</span> <span class="nc">Map</span><span class="p">.</span><span class="n">put</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+  <span class="n">parse_headers</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="kd">def</span> <span class="n">parse_headers</span><span class="p">([],</span> <span class="n">headers</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">headers</span>
+</pre></div>
+<p>
+  Works a treat! And it helped us learn recursion while moving our web server forward.
+</p>
+<p>
+  Now that we've been exposed to the <tt>Enum</tt> module which abstracts a bunch of common recursive operations behind functions, you've likely envisioned another way. Indeed, the familiar <tt>reduce</tt> function lives for this type of thing.
+</p>
+<p>
+  Here's an example of how to call it to sum up a list of numbers:
+</p>
+<div class="highlight"><pre><span class="o">&gt;</span> <span class="n">nums</span> <span class="p">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+
+<span class="o">&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">total_so_far</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">x</span> <span class="o">+</span> <span class="n">total_so_far</span> <span class="k">end</span><span class="p">)</span>
+<span class="mi">15</span>
+</pre></div>
+<p>
+  It takes three arguments: a list of values, an initial value (<tt>0</tt>),
+  and a function that takes two arguments. The first argument to the function is the next element in the list and the second argument is an accumulator.
+  We named it <tt>total_so_far</tt>, but you'll often see it abbreviated
+  <tt>acc</tt> for accumulator.
+</p>
+<p>
+  It starts by calling the function with the first element in the list (1) and the initial value (0). The function adds those numbers together and the returned value becomes the accumulator (1). Next the function is called with the second element in the list (2) and the accumulator (1), and the sum (3) become the new value of the accumulator. And so on until it returns the final accumulator value—the sum of 15. It's similiar to <tt>reduce</tt> in Ruby or JavaScript in that it <em>reduces</em> a list of values down to a single value. How does it work? You know the answer: recursion!
+</p>
+<p>
+  Want to give it a try on a more practical example? In the <tt>Parser</tt> module, comment the existing <tt>parse_headers</tt> function clauses and write a new <tt>parse_headers</tt> function that uses <tt>reduce</tt> to reduce the list of header lines down to a single map of key-value pairs.
+  You'll call it with a list of header lines, like so:
+</p>
+<div class="highlight"><pre><span class="n">headers</span> <span class="p">=</span> <span class="n">parse_headers</span><span class="p">(</span><span class="n">header_lines</span><span class="p">)</span>
+</pre></div>
+<p></p>
+        <div class="toggle-two">
+          <ul>
+            <li>
+                      <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Hint</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Hint</span>
+        </a>
+      </p>
+
+            </li>
+            <li>
+                      <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+            </li>
+          </ul>
+          <div style="display:none;">
+            <p class="hint">The initial value will be an empty map <tt>%{}</tt>. Each time the function is invoked it will get a single header line and the map of key-value pairs accumulated so far. Split the line into a key and a value and put the pair into the accumulated map using <tt>Map.put</tt>. That last line of the function needs to be <tt>Map.put</tt> so that the returned list is implicitly returned from the function, becoming the new accumulator.</p>
+          </div>
+          <div style="display:none; padding-top: 1em;">
+            <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_headers</span><span class="p">(</span><span class="n">header_lines</span><span class="p">)</span> <span class="k">do</span>
+  <span class="no">Enum</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">header_lines</span><span class="p">,</span> <span class="sx">%{}</span><span class="p">,</span> <span class="n">fn</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">headers_so_far</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="o">[</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">]</span> <span class="o">=</span> <span class="nb">String</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s2">": "</span><span class="p">)</span> 
+    <span class="no">Map</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">headers_so_far</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+  <span class="k">end</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+          </div>
+        </div>
+
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>enum</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/712/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

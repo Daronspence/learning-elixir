@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/41 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./20The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./20The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./20The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="giPc/EKzY6CN6Kbs+X45H206GhOFs0Qdqh8yuGBsXDXpKvmust8lakBiSskDwBAS2gj3p4+aPdUDI8Z4z1tpLQ==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./20The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Web Server Sockets</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Socket Timeline Diagram</h3>
+<p>
+  For a quick recap, here's a diagram of the timeline of sockets as seen in the video:
+</p>
+
+      <div class="diagram">
+        <a target="_blank" href="https://online.pragmaticstudio.com/assets/courses/elixir/sockets.png"><img width="500" height="281" src="./20The Pragmatic Studio Online _ Developing with Elixir_OTP_files/sockets-small-0f4d0a1a3c1a44b3f95ad66284a117ec.png" alt="Sockets small"></a>
+      </div>
+
+
+<h3>Erlang |&gt; Elixir</h3>
+<p>
+  Here's a summary of things to keep in mind when transcoding Erlang to Elixir:
+</p>
+<ul>
+  <li>
+    <p>
+      Erlang atoms start with a lowercase letter, whereas Elixir atoms start with a colon (<tt>:</tt>). For example, <tt>ok</tt> in Erlang becomes <tt>:ok</tt> in Elixir.
+    </p>
+  </li>
+  <li>
+    <p>
+      Erlang variables start with an uppercase letter, whereas Elixir variables start with a lowercase letter. For example, <tt>Socket</tt> in Erlang becomes <tt>socket</tt> in Elixir.
+    </p>
+  </li>
+  <li>
+    <p>
+      Erlang modules are always referenced as atoms. For example, <tt>gen_tcp</tt> in Erlang becomes <tt>:gen_tcp</tt> in Elixir.
+    </p>
+  </li>
+  <li>
+    <p>
+      Function calls in Erlang use a colon (<tt>:</tt>) whereas function calls in Elixir always us a dot (<tt>.</tt>). For example, <tt>gen_tcp:listen</tt> in Erlang becomes <tt>:gen_tcp.listen</tt> in Elixir. (Replace the colon with a dot.)
+    </p>
+  </li>
+  <li>
+    <p>
+      Last, but by no means least, it's important to note that <strong>Erlang strings aren't the same as Elixir strings</strong>. In Erlang, a double-quoted string is a list of characters whereas in Elixir a double-quoted string is a sequence of bytes (a binary). Thus, double-quoted Erlang and Elixir strings aren't compatible.
+      So if an Erlang function takes a string argument, you can't pass it 
+      an Elixir string. Instead, Elixir has a <em>character list</em> which you can create using single-quotes rather than double-quotes. For example, <tt>'hello'</tt> is a list of characters that's compatible with the Erlang string <tt>"hello"</tt>.
+    </p>
+  </li>
+</ul>
+
+<h3>Running the Server from the Command Line</h3>
+<p>
+  In the video we started the server in an <tt>iex</tt> session. You can also start it from the command line using
+</p>
+<pre>mix run -e "Servy.HttpServer.start(4000)"</pre>
+<p>
+  This runs the given Elixir expression in the context of the application. It also recompiles any files that are out of date.
+</p>
+
+<h3>Sending POST Requests from the Command Line</h3>
+<p>
+  In the video we used the Unix <tt>curl</tt> command-line utility to send a request, just to demonstrate that any HTTP client can talk to our server:
+</p>
+<pre>curl http://localhost:4000/api/bears</pre>
+<p>
+  In a previous exercise we challenged you to handle a <tt>POST</tt> request to the API endpoint <tt>/api/bears</tt> with a <tt>Content-Type</tt> of <tt>application/json</tt>. Here's how to use the <tt>curl</tt> utility to send a request to that endpoint:
+</p>
+<pre>curl -H 'Content-Type: application/json' -XPOST http://localhost:4000/api/bears -d '{"name": "Breezly", "type": "Polar"}'</pre>
+<p>
+  The <tt>-H</tt> option is used to set the <tt>Content-Type</tt> header to <tt>application/json</tt>. The <tt>-X</tt> option sets the request method to <tt>POST</tt>. And the <tt>-d</tt> option sets the request body to the given JSON string representing the bear you want to create.
+</p>
+
+<h3>Exercise: Watch a Throwback Video</h3>
+<p>
+  While we're on the topic of Erlang's history, every self-respecting Elixir developer should watch <a href="https://www.youtube.com/watch?v=xrIjfIjssLE" target="_blank">Erlang: The Movie</a> at least once. It's intended to be serious but, not unlike your favorite 80's movie, it comes off as a tad humorous in retrospect. Good times!
+</p>
+
+<h3>Exercise: Write an HTTP Client</h3>
+<p>
+  In the video we converted (transcoded) the server example from the
+<a href="http://erlang.org/doc/man/gen_tcp.html" target="_blank">gen_tcp</a> documentation and used a browser as the HTTP client.
+</p>
+<p>
+  The <tt>gen_tcp</tt> module can also be used to write a client that
+  talks to a TCP server. If you want some extra practice transcoding from Erlang to Elixir, convert the following client example (copied from the documentation) to Elixir:
+</p>
+<div class="highlight"><pre><span class="n">client</span><span class="p">()</span> <span class="p">-&gt;</span>
+    <span class="nc">SomeHostInNet</span> <span class="p">=</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="p">%</span> <span class="n">to</span> <span class="n">make</span> <span class="n">it</span> <span class="n">runnable</span> <span class="n">on</span> <span class="n">one</span> <span class="n">machine</span>
+    <span class="p">{</span><span class="n">ok</span><span class="p">,</span> <span class="nc">Sock</span><span class="p">}</span> <span class="p">=</span> <span class="n">gen_tcp</span><span class="ss">:connect</span><span class="p">(</span><span class="nc">SomeHostInNet</span><span class="p">,</span> <span class="mi">5678</span><span class="p">,</span> 
+                                 <span class="p">[</span><span class="n">binary</span><span class="p">,</span> <span class="p">{</span><span class="n">packet</span><span class="p">,</span> <span class="mi">0</span><span class="p">}]),</span>
+    <span class="n">ok</span> <span class="p">=</span> <span class="n">gen_tcp</span><span class="ss">:send</span><span class="p">(</span><span class="nc">Sock</span><span class="p">,</span> <span class="s2">"Some Data"</span><span class="p">),</span>
+    <span class="n">ok</span> <span class="p">=</span> <span class="n">gen_tcp</span><span class="ss">:close</span><span class="p">(</span><span class="nc">Sock</span><span class="p">).</span>
+</pre></div>
+<p>
+  One gotcha is that the <tt>connect</tt> function expects the first argument to be an Erlang string (the host name). The example uses the double-quoted string <tt>"localhost"</tt>. In Erlang, a double-quoted string is a list of characters whereas in Elixir a double-quoted string is a sequence of bytes (a binary). So if you pass the double-quoted Elixir string <tt>"localhost"</tt> into the Erlang <tt>connect</tt> function, it won't work. So how do we get a list of characters in Elixir? Easy, just use single-quotes rather than double-quotes. For example, pass <tt>'localhost'</tt> rather than <tt>"localhost"</tt>.
+</p>
+<p>
+  To connect it to your web server, you'll need to make the following changes:
+</p>
+<ul>
+  <li>
+    <p>
+      Use the following options:
+    </p>
+<div class="highlight"><pre><span class="p">[</span><span class="ss">:binary</span><span class="p">,</span> <span class="ss">packet</span><span class="p">:</span> <span class="ss">:raw</span><span class="p">,</span> <span class="ss">active</span><span class="p">:</span> <span class="no">false</span><span class="p">]</span>
+</pre></div>
+  </li>
+  <li>
+    <p>
+      Send a valid HTTP request, such as the following:
+    </p>
+<div class="highlight"><pre><span class="n">request</span> <span class="p">=</span> <span class="sh">"""</span>
+<span class="sh">GET /bears HTTP/1.1</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">Host: example.com</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">User-Agent: ExampleBrowser/1.0</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">Accept: */*</span><span class="se">\r</span><span class="sh"></span>
+<span class="se">\r</span><span class="sh"></span>
+<span class="sh">"""</span>
+</pre></div>
+    <p></p>
+  </li>
+  <li>
+    After sending the request, receive the response back from the server and print it out.
+  </li>
+</ul>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.HttpClient</span> <span class="k">do</span>
+  <span class="kd">def</span> <span class="n">send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">some_host_in_net</span> <span class="p">=</span> <span class="s1">'localhost'</span>  <span class="c1"># to make it runnable on one machine</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">socket</span><span class="p">}</span> <span class="p">=</span> 
+      <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">connect</span><span class="p">(</span><span class="n">some_host_in_net</span><span class="p">,</span> <span class="mi">4000</span><span class="p">,</span> <span class="p">[</span><span class="ss">:binary</span><span class="p">,</span> <span class="ss">packet</span><span class="p">:</span> <span class="ss">:raw</span><span class="p">,</span> <span class="ss">active</span><span class="p">:</span> <span class="no">false</span><span class="p">])</span>
+    <span class="ss">:ok</span> <span class="p">=</span> <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">send</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">}</span> <span class="p">=</span> <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="ss">:ok</span> <span class="p">=</span> <span class="ss">:gen_tcp</span><span class="p">.</span><span class="n">close</span><span class="p">(</span><span class="n">socket</span><span class="p">)</span>
+    <span class="n">response</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">request</span> <span class="p">=</span> <span class="sh">"""</span>
+<span class="sh">GET /bears HTTP/1.1</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">Host: example.com</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">User-Agent: ExampleBrowser/1.0</span><span class="se">\r</span><span class="sh"></span>
+<span class="sh">Accept: */*</span><span class="se">\r</span><span class="sh"></span>
+<span class="se">\r</span><span class="sh"></span>
+<span class="sh">"""</span>
+
+<span class="n">response</span> <span class="p">=</span> <span class="nc">Servy.HttpClient</span><span class="p">.</span><span class="n">send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="n">response</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>sockets</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/722/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

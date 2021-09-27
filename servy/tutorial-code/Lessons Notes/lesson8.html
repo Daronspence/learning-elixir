@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/16 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./8The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./8The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./8The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="K/Daa9tWNhwiGVIhoN0Tc6G/1CZBDJ4C2deyGoN1+bNA+f85Kzpw1u+TvgRaYzp+Fo05kksl58pw60baLELMqw==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./8The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Rewrite Paths and Track 404s</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Exercise: Rewriting</h3>
+<p>
+  URLs are commonly rewritten to make them prettier or to
+  juice up a page's SEO. Just for practice, add a function to the pipeline that rewrites requests for <tt>/bears?id=1</tt> to <tt>/bears/1</tt>,
+  <tt>/bears?id=2</tt> to <tt>/bears/2</tt>, and so on. 
+  Here's an example request:
+</p>
+<div class="highlight"><pre><span class="n">request</span> <span class="p">=</span> <span class="sh">"""</span>
+<span class="sh">GET /bears?id=1 HTTP/1.1</span>
+<span class="sh">Host: example.com</span>
+<span class="sh">User-Agent: ExampleBrowser/1.0</span>
+<span class="sh">Accept: */*</span>
+
+<span class="sh">"""</span>
+</pre></div>
+
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">rewrite_path</span><span class="p">(%{</span><span class="ss">path</span><span class="p">:</span> <span class="s2">"/bears?id="</span> <span class="o">&lt;&gt;</span> <span class="n">id</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/bears/</span><span class="si">#{</span><span class="n">id</span><span class="si">}</span><span class="s2">"</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Emojify Worthy Responses</h3>
+<p>
+  Just for fun, suppose you want your web server to decorate
+  all responses that have a 200 status with emojies before
+  and after the actual content.
+</p>
+<p>
+  Write an <tt>emojify</tt> function that emojifies those responses 
+  and plug that function into the pipeline.
+</p>
+        <div class="toggle-two">
+          <ul>
+            <li>
+                      <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Hint</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Hint</span>
+        </a>
+      </p>
+
+            </li>
+            <li>
+                      <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+            </li>
+          </ul>
+          <div style="display:none;">
+            <p class="hint">Since the function decorates the response, you'll need to plug the
+function into the pipeline <em>after</em> the
+<tt>route</tt> function, otherwise the <tt>conv</tt> map won't
+yet have a <tt>resp_body</tt> set. Also remember to define a
+default function clause that matches all other (non-200) requests.</p>
+          </div>
+          <div style="display:none; padding-top: 1em;">
+            <div class="highlight"><pre><span class="k">def</span> <span class="nf">emojify</span><span class="p">(</span><span class="sx">%{status: 200}</span> <span class="o">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">emojies</span> <span class="o">=</span> <span class="nb">String</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(</span><span class="s2">"🎉"</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+  <span class="n">body</span> <span class="o">=</span> <span class="n">emojies</span> <span class="o">&lt;&gt;</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">&lt;&gt;</span> <span class="n">conv</span><span class="o">.</span><span class="n">resp_body</span> <span class="o">&lt;&gt;</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">&lt;&gt;</span> <span class="n">emojies</span>
+
+  <span class="sx">%{ conv | resp_body: body }</span>
+<span class="k">end</span>
+
+<span class="k">def</span> <span class="nf">emojify</span><span class="p">(</span><span class="n">conv</span><span class="p">),</span> <span class="k">do</span><span class="p">:</span> <span class="n">conv</span>
+</pre></div>
+          </div>
+        </div>
+
+
+<h3>Exercise: Handle DELETE Differently</h3>
+<p>
+  Change the <tt>DELETE</tt> route you created in a previous exercise to pattern match on the <tt>conv</tt> map, rather than taking
+  three arguments.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">route</span><span class="p">(%{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"DELETE"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/bears/"</span> <span class="o">&lt;&gt;</span> <span class="n">_id</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">403</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="s2">"Bears must never be deleted!"</span><span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Thought Experiment</h3>
+<p>
+  Can you think of other useful functions to add to the pipeline, either 
+  to modify the request before its routed or modify the response before
+  it's sent back? You may need to consider additional fields in the 
+  conversation map that are affected by the functions.
+</p>
+
+<h3>Alternative Approach Using Regular Expressions</h3>
+<p>
+  In the first exercise above, you rewrote requests for <tt>/bears?id=1</tt>.
+  Now suppose you want to do the same for lions, tigers, and so on. 
+  But rather than writing separate <tt>rewrite_path</tt> function
+  clauses for each wildthing, you want to handle them all in one generic
+  <tt>rewrite_path</tt> function.
+</p>
+<p>
+  You might expect you could change the pattern to include a
+  <tt>thing</tt> variable, like so:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">rewrite_path</span><span class="p">(%{</span><span class="ss">path</span><span class="p">:</span> <span class="s2">"/"</span> <span class="o">&lt;&gt;</span> <span class="n">thing</span> <span class="o">&lt;&gt;</span> <span class="s2">"?id="</span> <span class="o">&lt;&gt;</span> <span class="n">id</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/</span><span class="si">#{</span><span class="n">thing</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">id</span><span class="si">}</span><span class="s2">"</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+ But that gives the following compile error: 
+</p>
+<pre>** (CompileError) a binary field without size is only allowed at the end of a binary pattern</pre>
+<p>
+  When pattern matching strings, you can't use a variable on the left side of the <tt>&lt;&gt;</tt> operator. 
+</p>
+<p>
+  A more flexible approach is to use a regular expression. (Every time
+  we make a course, someone asks about regular expressions. If you're 
+  that someone, here you go!) 
+</p>
+<p>
+  For example, suppose we have the following path:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">path</span> <span class="p">=</span> <span class="s2">"/bears?id=1"</span>
+</pre></div>
+<p>
+  Here's how to define a regular expression literal in Elixir:
+</p>
+<div class="highlight"><pre><span class="sx">~r{regexp}</span>
+</pre></div>
+<p>
+  The <tt>~r</tt> is called a <em>sigil</em> and the braces <tt>{ }</tt>
+  are delimiters for the regular expression itself. For example, here's a regular expression that matches <tt>/bears?id=1</tt>, <tt>/lions?id=7</tt>, <tt>/tigers?id=100</tt>, and so on:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">regex</span> <span class="p">=</span> <span class="sx">~r{\/(\w+)\?id=(\d+)}</span>
+</pre></div>
+<p>
+  It matches a literal <tt>/</tt> character followed by one or more word characters, followed by the literal <tt>?id=</tt> followed by
+  one or more digits.
+</p>
+<p>
+  The <tt>Regex</tt> module defines functions for working with regular
+  expressions. For example, we can check that it matches the path by
+  calling the <tt>match?</tt> function:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Regex</span><span class="p">.</span><span class="n">match?</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+<span class="no">true</span>
+</pre></div>
+<p>
+  Here's another way to write the same regular expression and capture the 
+  matching values:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">regex</span> <span class="p">=</span> <span class="sx">~r{\/(?&lt;thing&gt;\w+)\?id=(?&lt;id&gt;\d+)}</span>
+</pre></div>
+<p>
+  Notice we added <tt>?&lt;thing&gt;</tt> before the word characters and <tt>?&lt;id&gt;</tt> before the digit characters. This says we want to capture the 
+  word characters as <tt>thing</tt> and the digit characters as <tt>id</tt>.
+</p>
+<p>
+  Now we can call the <tt>named_captures</tt> function which returns 
+  the given captures as a map:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Regex</span><span class="p">.</span><span class="n">named_captures</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+<span class="p">%{</span><span class="s2">"id"</span> <span class="p">=&gt;</span> <span class="s2">"1"</span><span class="p">,</span> <span class="s2">"thing"</span> <span class="p">=&gt;</span> <span class="s2">"bears"</span><span class="p">}</span>
+</pre></div>
+<p>
+  Hey, now that's handy!
+</p>
+<p>
+  And just to show that it works with other matching paths such
+  as <tt>/lions?id=7</tt>:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">path</span> <span class="p">=</span> <span class="s2">"/lions?id=7"</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Regex</span><span class="p">.</span><span class="n">named_captures</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+<span class="p">%{</span><span class="s2">"id"</span> <span class="p">=&gt;</span> <span class="s2">"7"</span><span class="p">,</span> <span class="s2">"thing"</span> <span class="p">=&gt;</span> <span class="s2">"lions"</span><span class="p">}</span>
+</pre></div>
+<p>
+  If no captures are found, it returns <tt>nil</tt>. For example, this 
+  path is missing the id:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">path</span> <span class="p">=</span> <span class="s2">"/bears"</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Regex</span><span class="p">.</span><span class="n">named_captures</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+<span class="no">nil</span>
+</pre></div>
+<p>
+  Armed with this newfound knowledge, we can write a generic
+  <tt>rewrite_path</tt> function:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">rewrite_path</span><span class="p">(%{</span><span class="ss">path</span><span class="p">:</span> <span class="n">path</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">regex</span> <span class="p">=</span> <span class="sx">~r{\/(?&lt;thing&gt;\w+)\?id=(?&lt;id&gt;\d+)}</span>
+  <span class="n">captures</span> <span class="p">=</span> <span class="nc">Regex</span><span class="p">.</span><span class="n">named_captures</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+  <span class="n">rewrite_path_captures</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">captures</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Since <tt>Regex.named_captures</tt> returns a map or <tt>nil</tt>,
+  we can delegate to a new set of <tt>rewrite_path_captures</tt>
+  function clauses and pattern match on the argument:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">rewrite_path_captures</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="p">%{</span><span class="s2">"thing"</span> <span class="p">=&gt;</span> <span class="n">thing</span><span class="p">,</span> <span class="s2">"id"</span> <span class="p">=&gt;</span> <span class="n">id</span><span class="p">})</span> <span class="k">do</span>
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/</span><span class="si">#{</span><span class="n">thing</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">id</span><span class="si">}</span><span class="s2">"</span> <span class="p">}</span>
+<span class="k">end</span>
+
+<span class="kd">def</span> <span class="n">rewrite_path_captures</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="no">nil</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">conv</span>
+</pre></div>
+<p>
+  Notice that we pass the <tt>conv</tt> as the first argument and the
+  result of <tt>Regex.named_captures</tt> as the second argument.
+  If the regular expression found captures, then the first function is
+  called which uses the values of the <tt>thing</tt> and <tt>id</tt> keys in the map to update the <tt>path</tt> in the <tt>conv</tt> map. Otherwise, if no captures were found, then the second function is called which returns the <tt>conv</tt> map unchanged.
+</p>
+<p>
+  Pretty cool, eh?
+</p>
+
+<h3>Open-Ended Exercise: Use the Logger</h3>
+<p>
+  In the video we tracked a 404 by simply printing a warning to the console. 
+  If you want to get a tad fancier, you can use the built-in <tt>Logger</tt> module which supports various levels of logging and a wide range of configuration options. 
+</p>
+<p>
+  First, spend a minute perusing the documentation using the 
+  <tt>h</tt> helper function in an <tt>iex</tt> session. 
+  Did we mention that <tt>Logger</tt> has a <em>lot</em> of options?
+</p>
+<p>
+  Then to use <tt>Logger</tt> in your code, you'll first need to 
+  require it by adding the following line inside of your 
+  <tt>Servy.Handler</tt> module:
+</p>
+<div class="highlight"><pre><span class="kn">require</span> <span class="nc">Logger</span>
+</pre></div>
+<p>
+  The <tt>Logger</tt> module uses Elixir macros, so you have to 
+  <tt>require</tt> it for the macros can do their magic.
+</p>
+<p>
+  Then you can call logging functions, such as:
+</p>
+<div class="highlight"><pre><span class="nc">Logger</span><span class="p">.</span><span class="n">info</span> <span class="s2">"It's lunchtime somewhere."</span>
+<span class="nc">Logger</span><span class="p">.</span><span class="n">warn</span> <span class="s2">"Do we have a problem, Houston?"</span>
+<span class="nc">Logger</span><span class="p">.</span><span class="n">error</span> <span class="s2">"Danger Will Robinson!"</span>
+</pre></div>
+<p>
+  Go ahead and have some fun with it, but don't forget to come 
+  back and actually continue on with the course!
+</p>
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>rewriting</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/692/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>

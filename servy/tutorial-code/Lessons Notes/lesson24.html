@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://online.pragmaticstudio.com/courses/elixir/steps/53 -->
+<html lang="en-US" class="book"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>The Pragmatic Studio Online | Developing with Elixir/OTP</title>
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://online.pragmaticstudio.com/favicons/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://online.pragmaticstudio.com/favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="https://online.pragmaticstudio.com/favicons/favicon.ico">
+  <link rel="stylesheet" media="all" href="./24The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-cb185c07f9e7cf3071c019ec9ae89c92.css">
+  <script async="" src="./24The Pragmatic Studio Online _ Developing with Elixir_OTP_files/analytics.js.завантаження"></script><script src="./24The Pragmatic Studio Online _ Developing with Elixir_OTP_files/application-dc521b896b294cf4648f0cd28001e154.js.завантаження"></script>
+  
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="D/MNr8C/7fTCuyaw9FT50WTIhBEHjQHuVbKGn6uu/r9k+ij9MNOrPg8xypUO6tDc0/pppQ2keCb8jnJfBJnLpw==">
+    <script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59927351-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <a title="Pragmatic Studio Online" href="https://online.pragmaticstudio.com/"><img alt="Pragmatic Studio Online" title="Pragmatic Studio Online" src="./24The Pragmatic Studio Online _ Developing with Elixir_OTP_files/logo-a167560d29b6afb905c24a3432045f34.png"></a>
+    </div>
+    <div id="site_links">
+      <ul>
+        <li>
+          <a href="https://pragmaticstudio.com/my_account">my courses</a>
+        </li>
+        <li>•</li>
+        <li>
+          <a href="https://online.pragmaticstudio.com/signout">sign out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="main_wrapper_1">
+    <div id="main_wrapper_2">
+      <div id="main_wrapper_3">
+        <div id="main">
+          <div id="content">
+            
+
+<h1>Stateful Server Processes</h1>
+<h2 class="subtitle">Notes</h2>
+
+<h3>Prepared Code</h3>
+<p>
+  Here's the <tt>PledgeController</tt> module we had defined in the <tt>pledge_controller.ex</tt> file at the start of the video:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">Servy.PledgeController</span> <span class="k">do</span>
+  <span class="kd">def</span> <span class="n">create</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="p">%{</span><span class="s2">"name"</span> <span class="p">=&gt;</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"amount"</span> <span class="p">=&gt;</span> <span class="n">amount</span><span class="p">})</span> <span class="k">do</span>
+    <span class="c1"># Sends the pledge to the external service and caches it</span>
+    <span class="n">create_pledge</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nc">String</span><span class="p">.</span><span class="n">to_integer</span><span class="p">(</span><span class="n">amount</span><span class="p">))</span>
+
+    <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="s2">"</span><span class="si">#{</span><span class="n">name</span><span class="si">}</span><span class="s2"> pledged </span><span class="si">#{</span><span class="n">amount</span><span class="si">}</span><span class="s2">!"</span> <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">index</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+    <span class="c1"># Gets the recent pledges from the cache</span>
+    <span class="n">pledges</span> <span class="p">=</span> <span class="n">recent_pledges</span><span class="p">()</span>
+
+    <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="p">(</span><span class="n">inspect</span> <span class="n">pledges</span><span class="p">)</span> <span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Here are the two routes we added to <tt>handler.ex</tt>:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">route</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"POST"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/pledges"</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">Servy.PledgeController</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="n">conv</span><span class="p">.</span><span class="n">params</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="kd">def</span> <span class="n">route</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"GET"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/pledges"</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">Servy.PledgeController</span><span class="p">.</span><span class="n">index</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  They handle GET and POST requests for <tt>/pledges</tt> which are delegated to the <tt>index</tt> and <tt>create</tt> functions (actions) of the <tt>PledgeController</tt>, respectively.
+</p>
+<p>
+  And here's the code we added to the bottom of <tt>pledge_server.ex</tt> (outside of the module) to mimic what we did in the <tt>iex</tt> session:
+</p>
+<div class="highlight"><pre><span class="kn">alias</span> <span class="nc">Servy.PledgeServer</span>
+
+<span class="n">pid</span> <span class="p">=</span> <span class="n">spawn</span><span class="p">(</span><span class="nc">PledgeServer</span><span class="p">,</span> <span class="ss">:listen_loop</span><span class="p">,</span> <span class="p">[[]])</span>
+
+<span class="n">send</span> <span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:create_pledge</span><span class="p">,</span> <span class="s2">"larry"</span><span class="p">,</span> <span class="mi">10</span><span class="p">}</span>
+<span class="n">send</span> <span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:create_pledge</span><span class="p">,</span> <span class="s2">"moe"</span><span class="p">,</span> <span class="mi">20</span><span class="p">}</span>
+<span class="n">send</span> <span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:create_pledge</span><span class="p">,</span> <span class="s2">"curly"</span><span class="p">,</span> <span class="mi">30</span><span class="p">}</span>
+<span class="n">send</span> <span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:create_pledge</span><span class="p">,</span> <span class="s2">"daisy"</span><span class="p">,</span> <span class="mi">40</span><span class="p">}</span>
+<span class="n">send</span> <span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:create_pledge</span><span class="p">,</span> <span class="s2">"grace"</span><span class="p">,</span> <span class="mi">50</span><span class="p">}</span>
+
+<span class="n">send</span> <span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:recent_pledges</span><span class="p">}</span>
+
+<span class="k">receive</span> <span class="k">do</span> <span class="p">{</span><span class="ss">:response</span><span class="p">,</span> <span class="n">pledges</span><span class="p">}</span> <span class="p">-&gt;</span> <span class="nc">IO</span><span class="p">.</span><span class="n">inspect</span> <span class="n">pledges</span> <span class="k">end</span>
+</pre></div>
+
+<h3>Tip: Registering Unique Names</h3>
+<p>
+  In the video we used a module attribute to store the registered name of the PID as a constant:
+</p>
+<div class="highlight"><pre><span class="na">@name</span> <span class="ss">:pledge_server</span>
+</pre></div>
+<p>
+  And we registered the PID under that name:
+</p>
+<div class="highlight"><pre><span class="nc">Process</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="na">@name</span><span class="p">)</span>
+</pre></div>
+<p>
+  Then, to send messages to the server process, we used the registered name rather than the server's PID. For example:
+</p>
+<div class="highlight"><pre><span class="n">send</span> <span class="na">@name</span><span class="p">,</span> <span class="p">{</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:create_pledge</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">amount</span><span class="p">}</span>
+
+<span class="n">send</span> <span class="na">@name</span><span class="p">,</span> <span class="p">{</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:recent_pledges</span><span class="p">}</span>
+
+<span class="n">send</span> <span class="na">@name</span><span class="p">,</span> <span class="p">{</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:total_pledged</span><span class="p">}</span>
+</pre></div>
+<p>
+  As we mentioned, an error is raised if you try to register a process under the same name as another process. Instead of trying to come up with a unique name under which to register the PID, another option is to register the PID under the name <tt>__MODULE__</tt>, like so:
+</p>
+<div class="highlight"><pre><span class="na">@name</span> <span class="bp">__MODULE__</span>
+</pre></div>
+<p>
+  At compile time <tt>__MODULE__</tt> is expanded to the name of the current module, which means the PID will be registered under the name <tt>Servy.PledgeServer</tt> in this case. And because module names must always be unique in a project, using this technique ensures that the PID will always be registered under a unique name.
+</p>
+
+<h3>Finding a Registered Process</h3>
+<p>
+  We defined the <tt>PledgeServer.start</tt> function to register the spawned process under the name <tt>:pledge_server</tt>:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+<span class="c1">#PID&lt;0.158.0&gt;</span>
+</pre></div>
+<p>
+  Suppose you wanted to get the PID registered under that name. That's when the <tt>Process.whereis</tt> function comes in handy:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">whereis</span><span class="p">(</span><span class="ss">:pledge_server</span><span class="p">)</span>
+<span class="c1">#PID&lt;0.158.0&gt;</span>
+</pre></div>
+<p>
+  Notice it returns the same PID that was returned by the <tt>start</tt> function.
+</p>
+<p>
+  The <tt>Process</tt> module includes other functions for managing registered processes. For example, you can remove any registrations associated with a name using the <tt>Process.unregister</tt> function:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">unregister</span><span class="p">(</span><span class="ss">:pledge_server</span><span class="p">)</span>
+<span class="no">true</span>
+</pre></div>
+<p>
+  Now if we call <tt>Process.whereis</tt> to find the PID associated with the name <tt>:pledge_server</tt>, the function returns <tt>nil</tt> because no process is registered under that name:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">whereis</span><span class="p">(</span><span class="ss">:pledge_server</span><span class="p">)</span>
+<span class="no">nil</span>
+</pre></div>
+<p>
+  Suppose we decide to register our server process under a different name:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:pledgy</span><span class="p">)</span>
+<span class="no">true</span>
+</pre></div>
+<p>
+  Now the PID can be found under that name:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">whereis</span><span class="p">(</span><span class="ss">:pledgy</span><span class="p">)</span>
+<span class="c1">#PID&lt;0.158.0&gt;</span>
+</pre></div>
+<p>
+  Finally, you can use the <tt>Process.registered</tt> function to get a list of all registered processes in the Erlang VM:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">registered</span><span class="p">()</span>
+<span class="p">[</span><span class="nc">IEx.Supervisor</span><span class="p">,</span> <span class="ss">:httpc_hex</span><span class="p">,</span> <span class="ss">:standard_error_sup</span><span class="p">,</span> <span class="ss">:ssl_pem_cache</span><span class="p">,</span> <span class="p">...]</span>
+</pre></div>
+<p></p>
+
+<h3>Tip: Starting a Process With Different Initial States</h3>
+<p>
+  In the video we only needed to start the <tt>PledgeServer</tt> process with an empty cache, so we passed an empty list (the initial state) as the third argument to the <tt>spawn</tt> function:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">start</span> <span class="k">do</span>
+  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the pledge server..."</span>
+<span class="hll">  <span class="n">pid</span> <span class="p">=</span> <span class="n">spawn</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:listen_loop</span><span class="p">,</span> <span class="p">[[]])</span>  
+</span>  <span class="nc">Process</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="na">@name</span><span class="p">)</span>
+  <span class="n">pid</span>
+<span class="k">end</span>
+</pre></div>
+<p>  
+  However, you might have a scenario where you want to start a server process with varying initial states, depending on the situation at hand. To do that, you could change the <tt>start</tt> function to take an <tt>initial_state</tt> argument with a default value and then forward the value of that argument to the <tt>spawn</tt> function, like so:
+</p>
+<div class="highlight"><pre><span class="hll"><span class="kd">def</span> <span class="n">start</span><span class="p">(</span><span class="n">initial_state</span> <span class="p">\\</span> <span class="p">[])</span> <span class="k">do</span>
+</span>  <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Starting the pledge server..."</span>
+<span class="hll">  <span class="n">pid</span> <span class="p">=</span> <span class="n">spawn</span><span class="p">(</span><span class="bp">__MODULE__</span><span class="p">,</span> <span class="ss">:listen_loop</span><span class="p">,</span> <span class="p">[</span><span class="n">initial_state</span><span class="p">])</span>
+</span>  <span class="nc">Process</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="na">@name</span><span class="p">)</span>
+  <span class="n">pid</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Now when you call <tt>start</tt> with no argument the initial state will be an empty list:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">recent_pledges</span><span class="p">()</span>
+<span class="p">[]</span>
+</pre></div>
+<p>
+  Alternatively, you can call <tt>start</tt> with a list to pre-populate the cache, like so:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">start</span><span class="p">([{</span><span class="s2">"larry"</span><span class="p">,</span> <span class="mi">10</span><span class="p">}])</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">recent_pledges</span><span class="p">()</span>
+<span class="p">[{</span><span class="s2">"larry"</span><span class="p">,</span> <span class="mi">10</span><span class="p">}]</span>
+</pre></div>
+<p>
+  This is admittedly a contrived example that doesn't necessarily fit for this server process. But you can imagine situations where you would want to vary the initial state of another stateful server process depending on certain conditions.
+</p>
+
+<h3>Agents</h3>
+<p>
+  Sometimes you just want a quick and easy way to store state in a process without any hoopla. Anticipating those situations, Elixir provides the <a href="https://hexdocs.pm/elixir/Agent.html" target="_blank">Agent</a> module. You can think of it as a simple wrapper around a server process that stores state and offers access to that state through a thin client interface. 
+</p>
+<p>
+  It's best just to see an agent in action, so fire up an <tt>iex</tt> session and we'll take one for a spin...
+</p>
+<p>
+  To start an agent, you call the <tt>Agent.start</tt> function and pass it a function that returns the initial state. For example, suppose we want the agent to store a list of pledges, so we'll initialize the agent with an empty list:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">agent</span><span class="p">}</span> <span class="p">=</span> <span class="nc">Agent</span><span class="p">.</span><span class="n">start</span><span class="p">(</span><span class="k">fn</span> <span class="p">-&gt;</span> <span class="p">[]</span> <span class="k">end</span><span class="p">)</span>
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="c1">#PID&lt;0.90.0&gt;}</span>
+</pre></div>
+<p>
+  That spawns a process that's holding onto an Elixir list in its memory. Notice the <tt>agent</tt> variable is bound to a PID.
+</p>
+<p>
+  To add a pledge to the agent's state, you call the <tt>Agent.update</tt> function with a PID and a function that updates the state:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Agent</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="k">fn</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">[</span> <span class="p">{</span><span class="s2">"larry"</span><span class="p">,</span> <span class="mi">10</span><span class="p">}</span> <span class="p">|</span> <span class="n">state</span> <span class="p">]</span> <span class="k">end</span><span class="p">)</span>
+<span class="ss">:ok</span>
+</pre></div>
+<p>
+  Notice the function is passed the current state which the function then transforms into the new state. Let's add another pledge to the head of the list just to make things interesting:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Agent</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="k">fn</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">[</span> <span class="p">{</span><span class="s2">"moe"</span><span class="p">,</span> <span class="mi">20</span><span class="p">}</span> <span class="p">|</span> <span class="n">state</span> <span class="p">]</span> <span class="k">end</span><span class="p">)</span>
+<span class="ss">:ok</span>
+</pre></div>
+<p>
+  Then to retrieve the current state, you call the <tt>Agent.get</tt> function with a PID and a function that returns the state.
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Agent</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="k">fn</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">state</span> <span class="k">end</span><span class="p">)</span>
+<span class="p">[{</span><span class="s2">"moe"</span><span class="p">,</span> <span class="mi">20</span><span class="p">},</span> <span class="p">{</span><span class="s2">"larry"</span><span class="p">,</span> <span class="mi">10</span><span class="p">}]</span>
+</pre></div>
+<p>
+  Again, the function is passed the current state and can return all or part of the state as neccessary.
+</p>
+<p>
+  What could be simpler, right? We didn't have to define a module, write a <tt>receive</tt> block, maintain state in a recursive loop, or write any client interface functions. <tt>Agent</tt> encapsulates all those low-level details and gives us a tidy client interface. 
+</p>
+<p>
+  So why didn't we use <tt>Agent</tt> rather than hand-rolling our own stateful server process? Well, <tt>Agent</tt> is great if you simply need a process to store state. However, that's <em>all</em> an agent can do! It can't also run asynchronous queries or computations in the server process, such as sending requests to an external service or totaling the pledge amounts. 
+</p>
+<p>
+  More often than not you need a server to store state <em>and</em> do other things related to that state. For that reason, you won't see <tt>Agent</tt> used very often in the wild. But not to worry: Elixir provides another abstraction called <tt>GenServer</tt> for building stateful server processes. That's the topic of the next several sections!
+</p>
+
+<h3>Exercise: Write a Test for Pledge Server</h3>
+<p>
+  If you want more practice writing tests, write a test for the <tt>PledgeServer</tt> module. It should assert that the server caches only the 3 most recent pledges and totals their amounts.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">PledgeServerTest</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">ExUnit.Case</span>
+
+  <span class="kn">alias</span> <span class="nc">Servy.PledgeServer</span>
+
+  <span class="n">test</span> <span class="s2">"caches the 3 most recent pledges and totals their amounts"</span> <span class="k">do</span>
+    <span class="nc">PledgeServer</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="nc">PledgeServer</span><span class="p">.</span><span class="n">create_pledge</span><span class="p">(</span><span class="s2">"larry"</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="nc">PledgeServer</span><span class="p">.</span><span class="n">create_pledge</span><span class="p">(</span><span class="s2">"moe"</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="nc">PledgeServer</span><span class="p">.</span><span class="n">create_pledge</span><span class="p">(</span><span class="s2">"curly"</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+    <span class="nc">PledgeServer</span><span class="p">.</span><span class="n">create_pledge</span><span class="p">(</span><span class="s2">"daisy"</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+    <span class="nc">PledgeServer</span><span class="p">.</span><span class="n">create_pledge</span><span class="p">(</span><span class="s2">"grace"</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+
+    <span class="n">most_recent_pledges</span> <span class="p">=</span> <span class="p">[{</span><span class="s2">"grace"</span><span class="p">,</span> <span class="mi">50</span><span class="p">},</span> <span class="p">{</span><span class="s2">"daisy"</span><span class="p">,</span> <span class="mi">40</span><span class="p">},</span> <span class="p">{</span><span class="s2">"curly"</span><span class="p">,</span> <span class="mi">30</span><span class="p">}]</span>
+
+    <span class="n">assert</span> <span class="nc">PledgeServer</span><span class="p">.</span><span class="n">recent_pledges</span><span class="p">()</span> <span class="o">==</span> <span class="n">most_recent_pledges</span>
+
+    <span class="n">assert</span> <span class="nc">PledgeServer</span><span class="p">.</span><span class="n">total_pledged</span><span class="p">()</span> <span class="o">==</span> <span class="mi">120</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+
+<h3>Exercise: Create Another Stateful Server Process</h3>
+<p>
+  Currently, every time our web server gets a request for a path that's not found (a 404) it prints the missing path to the console. Here's the function currently defined in the <tt>Plugins</tt> module that does that:
+</p>
+<div class="highlight"><pre><span class="kd">def</span> <span class="n">track</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">status</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="n">path</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="k">if</span> <span class="nc">Mix</span><span class="p">.</span><span class="n">env</span> <span class="o">!=</span> <span class="ss">:test</span> <span class="k">do</span>
+    <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Warning: </span><span class="si">#{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is on the loose!"</span>
+  <span class="k">end</span>
+  <span class="n">conv</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  But suppose you want to keep a count of the requests that result in a 404. For example, if you're getting a lot of requests for <tt>/nessie</tt> then perhaps there's an opportunity to create a page that lets folks buy Loch Ness Monster (aka Nessie) t-shirts. After all, if there's demand for Nessie then you should meet it, right?
+</p>
+<p>
+  Create a stateful server process that keeps track of the number of times a particular path has resulted in a 404. To set up a goal and demonstrate the client interface, copy and paste the following test into a <tt>four_oh_four_counter_test.exs</tt> file in the <tt>test</tt> directory:
+</p>
+<div class="highlight"><pre><span class="kd">defmodule</span> <span class="nc">FourOhFourCounterTest</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="nc">ExUnit.Case</span>
+
+  <span class="kn">alias</span> <span class="nc">Servy.FourOhFourCounter</span><span class="p">,</span> <span class="ss">as</span><span class="p">:</span> <span class="nc">Counter</span>
+
+  <span class="n">test</span> <span class="s2">"reports counts of missing path requests"</span> <span class="k">do</span>
+    <span class="nc">Counter</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="nc">Counter</span><span class="p">.</span><span class="n">bump_count</span><span class="p">(</span><span class="s2">"/bigfoot"</span><span class="p">)</span>
+    <span class="nc">Counter</span><span class="p">.</span><span class="n">bump_count</span><span class="p">(</span><span class="s2">"/nessie"</span><span class="p">)</span>
+    <span class="nc">Counter</span><span class="p">.</span><span class="n">bump_count</span><span class="p">(</span><span class="s2">"/nessie"</span><span class="p">)</span>
+    <span class="nc">Counter</span><span class="p">.</span><span class="n">bump_count</span><span class="p">(</span><span class="s2">"/bigfoot"</span><span class="p">)</span>
+    <span class="nc">Counter</span><span class="p">.</span><span class="n">bump_count</span><span class="p">(</span><span class="s2">"/nessie"</span><span class="p">)</span>
+
+    <span class="n">assert</span> <span class="nc">Counter</span><span class="p">.</span><span class="n">get_count</span><span class="p">(</span><span class="s2">"/nessie"</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+    <span class="n">assert</span> <span class="nc">Counter</span><span class="p">.</span><span class="n">get_count</span><span class="p">(</span><span class="s2">"/bigfoot"</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+
+    <span class="n">assert</span> <span class="nc">Counter</span><span class="p">.</span><span class="n">get_counts</span> <span class="o">==</span> <span class="p">%{</span><span class="s2">"/bigfoot"</span> <span class="p">=&gt;</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"/nessie"</span> <span class="p">=&gt;</span> <span class="mi">3</span><span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<p>
+  Try to implement the <tt>FourOhFourCounter</tt> module from memory before looking at the answer (or the <tt>PledgeServer</tt>) for guidance. When the test passes you know you have everything working as expected!
+</p>
+        <div class="toggle-two">
+          <ul>
+            <li>
+                      <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Hint</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Hint</span>
+        </a>
+      </p>
+
+            </li>
+            <li>
+                      <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+            </li>
+          </ul>
+          <div style="display:none;">
+            <p class="hint">The server's state will be an Elixir map where each key is a path and the corresponding value is the number of times that path has been requested. To update the map, you can use the <tt>Map.update</tt> function.</p>
+          </div>
+          <div style="display:none; padding-top: 1em;">
+            <div class="highlight"><pre><span class="n">defmodule</span> <span class="no">Servy</span><span class="o">.</span><span class="n">FourOhFourCounter</span> <span class="k">do</span>
+
+  <span class="vi">@name</span> <span class="ss">:four_oh_four_counter</span>
+
+  <span class="c1"># Client Interface</span>
+
+  <span class="k">def</span> <span class="nf">start</span> <span class="k">do</span>
+    <span class="no">IO</span><span class="o">.</span><span class="n">puts</span> <span class="s2">"Starting the 404 counter..."</span>
+    <span class="n">pid</span> <span class="o">=</span> <span class="n">spawn</span><span class="p">(</span><span class="n">__MODULE__</span><span class="p">,</span> <span class="ss">:listen_loop</span><span class="p">,</span> <span class="o">[</span><span class="sx">%{}</span><span class="o">]</span><span class="p">)</span>  
+    <span class="no">Process</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="vi">@name</span><span class="p">)</span>
+    <span class="n">pid</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">bump_count</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">do</span>
+    <span class="nb">send</span> <span class="vi">@name</span><span class="p">,</span> <span class="p">{</span><span class="nb">self</span><span class="p">(),</span> <span class="ss">:bump_count</span><span class="p">,</span> <span class="n">path</span><span class="p">}</span>
+
+    <span class="n">receive</span> <span class="k">do</span> <span class="p">{</span><span class="ss">:response</span><span class="p">,</span> <span class="n">count</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="n">count</span> <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">get_counts</span> <span class="k">do</span>
+    <span class="nb">send</span> <span class="vi">@name</span><span class="p">,</span> <span class="p">{</span><span class="nb">self</span><span class="p">(),</span> <span class="ss">:get_counts</span><span class="p">}</span>
+
+    <span class="n">receive</span> <span class="k">do</span> <span class="p">{</span><span class="ss">:response</span><span class="p">,</span> <span class="n">counts</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="n">counts</span> <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">get_count</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">do</span>
+    <span class="nb">send</span> <span class="vi">@name</span><span class="p">,</span> <span class="p">{</span><span class="nb">self</span><span class="p">(),</span> <span class="ss">:get_count</span><span class="p">,</span> <span class="n">path</span><span class="p">}</span>
+
+    <span class="n">receive</span> <span class="k">do</span> <span class="p">{</span><span class="ss">:response</span><span class="p">,</span> <span class="n">count</span><span class="p">}</span> <span class="o">-&gt;</span> <span class="n">count</span> <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="c1"># Server</span>
+
+  <span class="k">def</span> <span class="nf">listen_loop</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">receive</span> <span class="k">do</span>
+      <span class="p">{</span><span class="n">sender</span><span class="p">,</span> <span class="ss">:bump_count</span><span class="p">,</span> <span class="n">path</span><span class="p">}</span> <span class="o">-&gt;</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="no">Map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="o">&amp;</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="nb">send</span> <span class="n">sender</span><span class="p">,</span> <span class="p">{</span><span class="ss">:response</span><span class="p">,</span> <span class="ss">:ok</span><span class="p">}</span>
+        <span class="n">listen_loop</span><span class="p">(</span><span class="n">new_state</span><span class="p">)</span>
+      <span class="p">{</span><span class="n">sender</span><span class="p">,</span> <span class="ss">:get_counts</span><span class="p">}</span> <span class="o">-&gt;</span>
+        <span class="nb">send</span> <span class="n">sender</span><span class="p">,</span> <span class="p">{</span><span class="ss">:response</span><span class="p">,</span> <span class="n">state</span><span class="p">}</span>
+        <span class="n">listen_loop</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+      <span class="p">{</span><span class="n">sender</span><span class="p">,</span> <span class="ss">:get_count</span><span class="p">,</span> <span class="n">path</span><span class="p">}</span> <span class="o">-&gt;</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="no">Map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="nb">send</span> <span class="n">sender</span><span class="p">,</span> <span class="p">{</span><span class="ss">:response</span><span class="p">,</span> <span class="n">count</span><span class="p">}</span>
+        <span class="n">listen_loop</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+      <span class="n">unexpected</span> <span class="o">-&gt;</span>
+        <span class="no">IO</span><span class="o">.</span><span class="n">puts</span> <span class="s2">"Unexpected message: </span><span class="si">#{</span><span class="nb">inspect</span> <span class="n">unexpected</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">listen_loop</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+          </div>
+        </div>
+
+<p>
+  OK, now that you have the <tt>FourOhFourCounter</tt> working in isolation it's time to integrate it into the web server. Remember that function in the <tt>Plugins</tt> module that tracks 404s? Change it to include bumping the count of the missing path.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">track</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">status</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="n">path</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="k">if</span> <span class="nc">Mix</span><span class="p">.</span><span class="n">env</span> <span class="o">!=</span> <span class="ss">:test</span> <span class="k">do</span>
+    <span class="nc">IO</span><span class="p">.</span><span class="n">puts</span> <span class="s2">"Warning: </span><span class="si">#{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is on the loose!"</span>
+<span class="hll">    <span class="nc">Servy.FourOhFourCounter</span><span class="p">.</span><span class="n">bump_count</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span>  <span class="k">end</span>
+  <span class="n">conv</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then in <tt>handler.ex</tt> add a new route for <tt>/404s</tt> that gets the 404 counts and returns them in the response body. You can get fancy by creating a template file if you want, but start by simply calling <tt>inspect</tt> on the counts and putting the result in the response body.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">route</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"GET"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/404s"</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">counts</span> <span class="p">=</span> <span class="nc">Servy.FourOhFourCounter</span><span class="p">.</span><span class="n">get_counts</span><span class="p">()</span>
+
+  <span class="p">%{</span> <span class="n">conv</span> <span class="p">|</span> <span class="ss">status</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="ss">resp_body</span><span class="p">:</span> <span class="n">inspect</span> <span class="n">counts</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then fire up all three servers in <tt>iex</tt>.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.FourOhFourCounter</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Servy.HttpServer</span><span class="p">.</span><span class="n">start</span><span class="p">(</span><span class="mi">4000</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  Then browse to <a href="http://localhost:4000/nessie">http://localhost:4000/nessie</a> and hit reload a few times to simulate a demand for some stylish aquatic t-shirts. To see all the sales you're missing out on, browse to <a href="http://localhost:4000/404s">http://localhost:4000/404s</a>.
+</p>
+
+
+<h3>Exercise: POSTing Data to an API</h3>
+<p>
+  In the video we focused our attention on writing a stateful server process, and therefore we didn't bother to implement the actual POSTing of a pledge to an external service. Added to which, if you worked through an 
+<a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">earlier exercise</a> on sending a request to an API using <a href="https://github.com/edgurgel/httpoison" target="_blank">HTTPoison</a>, then you already have a start on knowing how to POST data to an API!
+</p>
+<p>
+  As a simple example, suppose we want to POST some JSON representing a pledge to the <tt>https://httparrot.herokuapp.com/post</tt> endpoint of the free, no-account-necessary <a href="http://httparrot.herokuapp.com/" target="_blank">http://httparrot.herokuapp.com/</a> service. It exists specifically for experimental testing like we're about to do.
+</p><p>
+</p><p>
+  To send an HTTP POST request, call the <tt>HTTPoison.post</tt> function with an endpoint URL and the body of the request:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">url</span> <span class="p">=</span> <span class="s2">"https://httparrot.herokuapp.com/post"</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="n">body</span> <span class="p">=</span> <span class="sx">~s({"name": "larry", "amount": 10})</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">}</span> <span class="p">=</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">post</span> <span class="n">url</span><span class="p">,</span> <span class="n">body</span>
+</pre></div>
+<p>
+  <em>We used the <tt>~s</tt> sigil to generate the double-quoted body string so we didn't have to escape the double quotes contained in the string.</em>
+</p>
+<p>
+  The <tt>post</tt> function returns <tt>{:ok, response}</tt> if the request is successful, where <tt>response</tt> is an <tt>HTTPoison.Response</tt> struct. Otherwise, <tt>{:error, reason}</tt> is returned. We assume the request succeeds, but you'd want to handle both cases.
+</p>
+<p>
+  You can optionally pass a third argument to specify a list of request headers. For example, when POSTing JSON to an API you likely want to set the <tt>Content-Type</tt> header to <tt>application/json</tt>:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">headers</span> <span class="p">=</span> <span class="p">[{</span><span class="s2">"Content-Type"</span><span class="p">,</span> <span class="s2">"application/json"</span><span class="p">}]</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">response</span><span class="p">}</span> <span class="p">=</span> <span class="nc">HTTPoison</span><span class="p">.</span><span class="n">post</span> <span class="n">url</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">headers</span>
+</pre></div>
+<p>
+  With the <tt>HTTPoison.Response</tt> struct now bound to the <tt>response</tt> variable, you can access various fields of the response such as the status code:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">response</span><span class="p">.</span><span class="n">status_code</span>
+<span class="mi">200</span>
+</pre></div>
+<p>
+  And just as we did in the earlier exercise, we can parse the response body (a JSON string) into an Elixir map:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Poison.Parser</span><span class="p">.</span><span class="n">parse!</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">body</span><span class="p">)</span>
+<span class="p">%{</span><span class="s2">"args"</span> <span class="p">=&gt;</span> <span class="p">%{},</span> <span class="s2">"data"</span> <span class="p">=&gt;</span> <span class="s2">"{"</span><span class="n">name</span><span class="s2">": "</span><span class="n">larry</span><span class="s2">", "</span><span class="n">amount</span><span class="s2">": 10}"</span><span class="p">,</span>
+  <span class="s2">"form"</span> <span class="p">=&gt;</span> <span class="p">%{},</span>
+  <span class="s2">"headers"</span> <span class="p">=&gt;</span> <span class="p">%{...},</span>
+  <span class="s2">"json"</span> <span class="p">=&gt;</span> <span class="p">%{</span><span class="s2">"amount"</span> <span class="p">=&gt;</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"name"</span> <span class="p">=&gt;</span> <span class="s2">"larry"</span><span class="p">},</span>
+  <span class="s2">"url"</span> <span class="p">=&gt;</span> <span class="s2">"http://httparrot.herokuapp.com/post"</span><span class="p">}</span>
+</pre></div>
+<p>
+  That's all there is to it!
+</p>
+
+<h3>Exercise: Observing Messages</h3>
+<p>
+  We've been peeking in mailboxes using the <tt>Process.info</tt> function, but it's handy to know that you can also use the Observer GUI to see what's in the mailbox of any process.
+</p>
+<p>
+  To set things up, first comment out the clause in the <tt>PledgeServer.listen_loop</tt> function that handles unexpected messages:
+</p>
+<div class="highlight"><pre><span class="c1"># unexpected -&gt;</span>
+<span class="c1">#  IO.puts "Unexpected messaged: #{inspect unexpected}"</span>
+<span class="c1">#  listen_loop(state)</span>
+</pre></div>
+<p>
+  Then hop into an <tt>iex</tt> session and send 1000 unexpected messages to the server, like so: 
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="n">pid</span> <span class="p">=</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="n">iex</span><span class="o">&gt;</span> <span class="mi">1</span><span class="p">..</span><span class="mi">500</span> <span class="o">|&gt;</span> <span class="nc">Enum</span><span class="p">.</span><span class="n">each</span><span class="p">(</span><span class="k">fn</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">send</span> <span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:stop</span><span class="p">,</span> <span class="s2">"hammertime </span><span class="si">#{</span><span class="n">n</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span> <span class="k">end</span><span class="p">)</span>
+  
+<span class="n">iex</span><span class="o">&gt;</span> <span class="k">for</span> <span class="n">n</span> <span class="p">&lt;-</span> <span class="mi">501</span><span class="p">..</span><span class="mi">1000</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="n">send</span> <span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:stop</span><span class="p">,</span> <span class="s2">"hammertime </span><span class="si">#{</span><span class="n">n</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span>
+</pre></div>
+<p>
+  <em>We sent the messages two different ways—the first 500 using <tt>Enum.each</tt> and the last 500 using a comprehension—just to show you two different ways to do it. :-)</em>
+</p>
+<p>
+  Now the mailbox of the <tt>PledgeServer</tt> process should contain 1000 messages:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="nc">Process</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:message_queue_len</span><span class="p">)</span>
+<span class="p">{</span><span class="ss">:message_queue_len</span><span class="p">,</span> <span class="mi">1000</span><span class="p">}</span>
+</pre></div>
+<p>
+  Don't worry: Once the process dies or the Erlang VM exits, the mailbox will be cleaned up.
+</p>
+<p>
+  Now fire up the Observer GUI:
+</p>
+<div class="highlight"><pre><span class="n">iex</span><span class="o">&gt;</span> <span class="ss">:observer</span><span class="p">.</span><span class="n">start</span>
+</pre></div>
+<p>
+  Go to the <em>Processes</em> tab and sort the table by clicking on the <em>MsgQ</em> column header. This column indicates how many messages are currently waiting in the mailbox of that process. We sent 1000 messages to the <tt>PledgeServer</tt> process so it should be the first process in the table. Double-click that process (anywhere on the line) and a new pane will pop open. Go to the <em>Messages</em> tab of that new pane and you'll see a list of all the messages that are in the mailbox!
+</p>
+<p>
+  When you're done looking around, don't forget to <strong>uncomment the clause that handles unexpected messages</strong>!
+</p>
+
+<h3>Exercise: Render the Pledges</h3>
+<p>
+  In the video we used the <tt>curl</tt> command-line utility to create pledges and get a list of the most recent pledges, like so:
+</p>
+<pre>curl -XPOST http://localhost:4000/pledges -d 'name=larry&amp;amount=100'
+curl -XPOST http://localhost:4000/pledges -d 'name=moe&amp;amount=200'
+curl -XPOST http://localhost:4000/pledges -d 'name=curly&amp;amount=300'
+curl -XPOST http://localhost:4000/pledges -d 'name=daisy&amp;amount=400'
+curl -XPOST http://localhost:4000/pledges -d 'name=grace&amp;amount=500'
+
+curl http://localhost:4000/pledges</pre>
+<p>
+  We didn't bother to create an HTML form to POST pledges from a browser or render the most recent pledges on an HTML page... because you already know how to do that!
+</p>
+<p>
+  Give it a try on your own first before following the steps below.
+  You'll need to create two templates files: one that renders an HTML form that POSTs the pledge and the other that renders a list of recent pledges.
+</p>
+
+<ul>
+<li>
+<p>
+  In the <tt>templates</tt> directory, create a template named <tt>new_pledge.eex</tt> that renders the HTML form. The form needs to capture the name and amount, then POST them to <tt>/pledges</tt> when the submit
+  button is clicked.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="nt">&lt;h1&gt;</span>Create A Pledge<span class="nt">&lt;/h1&gt;</span>
+
+<span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/pledges"</span> <span class="na">method=</span><span class="s">"POST"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;p&gt;</span>
+    Name:<span class="nt">&lt;br/&gt;</span>
+    <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"name"</span><span class="nt">&gt;</span>    
+  <span class="nt">&lt;/p&gt;</span>
+  <span class="nt">&lt;p&gt;</span>
+    Amount:<span class="nt">&lt;br/&gt;</span>
+    <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"amount"</span><span class="nt">&gt;</span>    
+  <span class="nt">&lt;/p&gt;</span>
+  <span class="nt">&lt;p&gt;</span>
+    <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">value=</span><span class="s">"Create Pledge"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;/p&gt;</span>
+<span class="nt">&lt;/form&gt;</span>
+</pre></div>
+        </div>
+      </div>
+
+</li>
+<li>
+<p>
+  In the same directory, create a <tt>recent_pledges.eex</tt> template that renders the pledges assumed to be in the <tt>pledges</tt> variable. Remember, the controller already assigns the recent pledges to a <tt>pledges</tt> variable. It's a list of tuples where the first element is the name and the second element in the amount.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="nt">&lt;h1&gt;</span>Recent Pledges<span class="nt">&lt;/h1&gt;</span>
+
+<span class="nt">&lt;ul&gt;</span>
+  <span class="cp">&lt;%=</span> <span class="k">for</span> <span class="n">pledge</span> <span class="o">&lt;-</span> <span class="n">pledges</span> <span class="k">do</span> <span class="cp">%&gt;</span>
+    <span class="nt">&lt;li&gt;</span><span class="cp">&lt;%=</span> <span class="n">elem</span><span class="p">(</span><span class="n">pledge</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="cp">%&gt;</span> pledged <span class="cp">&lt;%=</span> <span class="n">elem</span><span class="p">(</span><span class="n">pledge</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="cp">%&gt;</span><span class="nt">&lt;/li&gt;</span>
+  <span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+<span class="nt">&lt;/ul&gt;</span>
+
+<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"/pledges/new"</span><span class="nt">&gt;</span>Make a pledge!<span class="nt">&lt;/a&gt;</span>
+</pre></div>
+        </div>
+      </div>
+
+</li>
+<li>
+<p>
+  With the two templates complete, it's time to move on to the controller. In the <tt>PledgeController</tt> module, start by importing the <tt>View</tt> module which defines the <tt>render</tt> convenience function.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kn">import</span> <span class="nc">Servy.View</span>
+</pre></div>
+        </div>
+      </div>
+
+<p></p>
+<p>
+  In the <tt>index</tt> action, call the <tt>View.render</tt> function to render the <tt>recent_pledges.eex</tt> template with the <tt>pledges</tt> variable as a binding.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">index</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">pledges</span> <span class="p">=</span> <span class="nc">Servy.PledgeServer</span><span class="p">.</span><span class="n">recent_pledges</span><span class="p">()</span>
+
+  <span class="n">render</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="s2">"recent_pledges.eex"</span><span class="p">,</span> <span class="ss">pledges</span><span class="p">:</span> <span class="n">pledges</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+<p>
+  That should take care of displaying recent pledges. 
+</p>
+</li>
+<li>
+<p>
+  Next up you need to arrange things to display the pledge form. To do that, define a <tt>new</tt> action in the <tt>PledgeController</tt> that simply renders the <tt>new_pledge.eex</tt> template.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">new</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">render</span><span class="p">(</span><span class="n">conv</span><span class="p">,</span> <span class="s2">"new_pledge.eex"</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+</li>
+<li>
+<p>
+  Finally, add a new route to <tt>handler.ex</tt> that delegates GET requests for <tt>/pledges/new</tt> to the <tt>new</tt> action you just defined in the <tt>PledgeController</tt>.
+</p>
+      <div class="toggle">
+                <p>
+          <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+            <span class="title">Show Answer</span>
+          </a>
+        </p>
+      <p style="display:none;">
+        <a class="button show-hide" href="javascript:void(0)" rel="nofollow">
+          <span class="title">Hide Answer</span>
+        </a>
+      </p>
+
+        <div style="display:none;">
+          
+          <div class="highlight"><pre><span class="kd">def</span> <span class="n">route</span><span class="p">(%</span><span class="nc">Conv</span><span class="p">{</span><span class="ss">method</span><span class="p">:</span> <span class="s2">"GET"</span><span class="p">,</span> <span class="ss">path</span><span class="p">:</span> <span class="s2">"/pledges/new"</span><span class="p">}</span> <span class="p">=</span> <span class="n">conv</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nc">Servy.PledgeController</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+        </div>
+      </div>
+
+</li>
+<li>
+  <p>
+    Now, after firing up the <tt>PledgeServer</tt> and <tt>HttpServer</tt>,
+    you should be able to browse to <a href="http://localhost:4000/pledges/new">http://localhost:4000/pledges/new</a> and see a pledge form. Use this form to create a few pledges. Then browse to <a href="http://localhost:4000/pledges">http://localhost:4000/pledges</a> and you should see the most recent pledges!
+  </p>
+</li>
+</ul>
+
+<h3>Code So Far</h3>
+<p>
+  The code for this video is in the
+<code>stateful-server</code> directory found within the
+  <tt>video-code</tt> directory of the <a href="https://s3.amazonaws.com/pragmaticstudio/courses/elixir/pragstudio-elixir-code.zip">code bundle</a>.
+</p>
+
+
+
+<div class="chapter_navigation bottom">
+  
+    <a class="multi-line-button green" href="https://online.pragmaticstudio.com/courses/elixir/steps/736/achievements" data-method="post" rel="nofollow" style="width:16em">
+      <span class="title">Go To Next Video</span>
+      <span class="subtitle">and mark this step complete!</span>
+    </a>
+    
+</div>
+
+
+
+  
+
+
+
+            <div id="footer">
+              <p>
+  All course material, including videos, slides, and source code, is copyrighted and licensed for
+  <em>individual use only</em>. You may make copies for your own personal use (e.g. on your laptop, on your
+  iPad, on your backup drive). However, you may not transfer ownership or share the material with other
+  people. We make no guarantees that the source code is fit for any purpose. Course material may not be
+  used to create training material, courses, books, and the like. Please support us and our instructors by
+  encouraging others to purchase their own copies. Thank you!
+</p>
+
+              <p>
+                Copyright © 2005–2018, The Pragmatic Studio.
+                All Rights Reserved.
+              </p>
+            </div>
+          </div>
+          <div id="sidebar">
+            <div class="course_head">
+  <h3>Developing with Elixir/OTP</h3>
+  <h4 class="subtitle"></h4>
+</div>
+<div class="progress">
+  <div class="meter">
+    <div class="meter_progress" style="width: 0%"></div>
+  </div>
+  <div class="meter_label">
+    0% complete
+  </div>
+  <div class="meter_reset">
+    
+  </div>
+</div>
+<div class="navigation">
+  <ul>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/1">1. Introduction</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/1">Video</a><span class="time">1:56</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/2">Setup</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/2">2. Create Mix Project</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/3">Video</a><span class="time">8:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/4">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/3">3. High-Level Transformations</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/5">Video</a><span class="time">8:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/6">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/4">4. Parse Request Line</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/7">Video</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/8">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/5">5. Route and Response</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/9">Video</a><span class="time">6:40</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/10">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/6">6. Function Clauses</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/11">Video</a><span class="time">6:28</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/12">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/7">7. Request Params and Status Codes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/13">Video</a><span class="time">8:45</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/14">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/8">8. Rewrite Paths and Track 404s</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/15">Video</a><span class="time">9:31</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/16">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/9">9. Serve Static Files</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/17">Video</a><span class="time">11:27</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/18">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/10">10. Module Attributes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/19">Video</a><span class="time">3:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/20">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/11">11. Organizing Code</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/21">Video</a><span class="time">6:30</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/22">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/12">12. Modeling With Structs</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/23">Video</a><span class="time">11:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/24">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/13">13. Handle POST Requests</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/25">Video</a><span class="time">10:32</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/26">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/14">14. Recursion</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/27">Video</a><span class="time">13:17</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/28">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/15">15. Slicing and Dicing with Enum</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/29">Video: Part 1</a><span class="time">10:25</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/30">Video: Part 2</a><span class="time">11:51</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/31">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/16">16. Comprehensions</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/32">Video</a><span class="time">11:15</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/33">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/17">17. A Peek At Phoenix</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/34">Video</a><span class="time">13:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/35">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/18">18. Test Automation</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/36">Video</a><span class="time">15:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/37">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/19">19. Rendering JSON</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/38">Video</a><span class="time">06:47</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/39">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/20">20. Web Server Sockets</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/40">Video</a><span class="time">19:11</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/41">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/21">21. Concurrent, Isolated Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/42">Video: Part 1</a><span class="time">12:07</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/43">Video: Part 2</a><span class="time">10:21</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/44">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/22">22. Sending and Receiving Messages</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/45">Video</a><span class="time">19:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/46">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/23">23. Asynchronous Tasks</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/47">Video</a><span class="time">20:19</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/48">Notes</a></li>
+        </ul>
+      </li>
+      <li class="expanded">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/24">24. Stateful Server Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/49">Video: Part 1</a><span class="time">8:09</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/50">Video: Part 2</a><span class="time">11:55</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/51">Video: Part 3</a><span class="time">9:49</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/52">Video: Part 4</a><span class="time">8:59</span></li>
+            <li class="here"><a href="https://online.pragmaticstudio.com/courses/elixir/steps/53">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/25">25. Refactoring Toward GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/54">Video</a><span class="time">21:12</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/55">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/26">26. OTP GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/56">Video</a><span class="time">16:57</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/57">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/27">27. Another GenServer</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/58">Video</a><span class="time">9:00</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/59">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/28">28. Linking Processes</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/60">Video</a><span class="time">13:38</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/61">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/29">29. Fault Recovery with OTP Supervisors</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/62">Video: Part 1</a><span class="time">13:39</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/63">Video: Part 2</a><span class="time">6:13</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/64">Notes</a></li>
+        </ul>
+      </li>
+      <li class="">
+        <a href="https://online.pragmaticstudio.com/courses/elixir/modules/30">30. Final OTP Application</a>
+        <ul>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/65">Video</a><span class="time">15:22</span></li>
+            <li class=""><a href="https://online.pragmaticstudio.com/courses/elixir/steps/66">Notes</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/next_steps">Next Steps</a></li>
+            <li class="not-completable"><a href="https://online.pragmaticstudio.com/courses/elixir/evaluation">Evaluation</a></li>
+        </ul>
+      </li>
+  </ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script id="wappalyzer" src="chrome-extension://gppongmhjkpfnbhagpmjfkannfbllamg/js/inject.js"></script></body></html>
